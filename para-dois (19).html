@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a" id="metaTheme">
+<title>Para Dois</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   PARA DOIS — estilos
+   1. Tokens e temas  2. Base  3. Componentes  4. Telas  5. Jogo  6. Movimento
+   ===================================================================== */
+
+/* ---------- 1. TOKENS E TEMAS ---------- */
+:root{
+  --nav-h:66px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+  --font-ui:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --font-serif:'Playfair Display','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --p1:255,213,79;   /* jogador 1 */
+  --p2:255,122,170;  /* jogador 2 */
+}
+
+body.t-dark{
+  --bg:#0a0a0a;--bg1:#111111;--bg2:#1a1a1a;--bg3:#242424;
+  --text:#ffffff;--t2:#b4b4b4;--t3:#8a8a8a;--t4:#333333;
+  --acc:#e040fb;--acc2:#aa00ff;--acc-rgb:224,64,251;--on-acc:#0a0a0a;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.11);--b3:rgba(255,255,255,.18);
+  --nav:rgba(10,10,10,.88);--sh:0 -1px 0 rgba(255,255,255,.06);
+  --yel:255,213,79;--red:255,100,100;--cyan:64,200,255;--green:100,240,160;--orange:255,170,64;--gold:255,213,79;
+  --danger:255,110,110;--card-shadow:0 10px 44px rgba(0,0,0,.5);
+}
+body.t-oled{
+  --bg:#000000;--bg1:#0a0a0a;--bg2:#111111;--bg3:#1a1a1a;
+  --text:#ffffff;--t2:#b0b0b0;--t3:#838383;--t4:#2a2a2a;
+  --acc:#00e5ff;--acc2:#0097a7;--acc-rgb:0,229,255;--on-acc:#001418;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.1);--b3:rgba(255,255,255,.16);
+  --nav:rgba(0,0,0,.9);--sh:0 -1px 0 rgba(255,255,255,.05);
+  --yel:255,213,79;--red:255,80,130;--cyan:0,229,255;--green:100,240,160;--orange:255,170,64;--gold:255,213,79;
+  --danger:255,100,130;--card-shadow:0 10px 44px rgba(0,0,0,.6);
+}
+body.t-light{
+  --bg:#f5f5f5;--bg1:#ffffff;--bg2:#ffffff;--bg3:#ececf0;
+  --text:#0a0a0a;--t2:#4a4a4a;--t3:#6b6b6b;--t4:#cccccc;
+  --acc:#6200ea;--acc2:#3700b3;--acc-rgb:98,0,234;--on-acc:#ffffff;
+  --b1:rgba(0,0,0,.08);--b2:rgba(0,0,0,.12);--b3:rgba(0,0,0,.2);
+  --nav:rgba(255,255,255,.92);--sh:0 -1px 0 rgba(0,0,0,.08);
+  --yel:166,98,0;--red:196,28,28;--cyan:0,122,170;--green:0,142,84;--orange:190,92,0;--gold:166,98,0;
+  --danger:196,28,28;--card-shadow:0 10px 30px rgba(40,20,80,.14);
+}
+body.t-wine{
+  --bg:#0c0005;--bg1:#14000a;--bg2:#1e000f;--bg3:#2a0017;
+  --text:#fdf0e8;--t2:#d3ac94;--t3:#a8745e;--t4:#3a1a10;
+  --acc:#ffd54f;--acc2:#ffab00;--acc-rgb:255,213,79;--on-acc:#1a0a00;
+  --b1:rgba(255,213,79,.08);--b2:rgba(255,213,79,.13);--b3:rgba(255,213,79,.22);
+  --nav:rgba(12,0,5,.9);--sh:0 -1px 0 rgba(255,213,79,.09);
+  --yel:255,213,79;--red:255,80,80;--cyan:120,210,255;--green:130,235,170;--orange:255,160,90;--gold:255,213,79;
+  --danger:255,110,110;--card-shadow:0 10px 44px rgba(0,0,0,.55);
+}
+/* cor de cada modo (cartões de modo da tela inicial) */
+body{--m-perg:var(--yel);--m-vdd:var(--acc-rgb);--m-en:var(--green);}
+body.t-wine{--m-vdd:255,120,170;}
+
+/* ---------- 2. BASE ---------- */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--font-ui);background:var(--bg);color:var(--text);
+  min-height:100vh;min-height:100dvh;overflow-x:hidden;line-height:1.4;
+  -webkit-font-smoothing:antialiased;transition:background .3s var(--ease),color .3s var(--ease);
+}
+body::before{ /* brilho ambiente discreto */
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(70% 38% at 90% -6%,rgba(var(--acc-rgb),.15),transparent 70%),
+    radial-gradient(60% 34% at -8% 104%,rgba(var(--acc-rgb),.08),transparent 70%);
+}
+#app{position:relative;z-index:1;width:100%;max-width:480px;margin:0 auto;}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-appearance:none;appearance:none;touch-action:manipulation;}
+input,textarea{font:inherit;color:inherit;}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;}
+.hidden{display:none!important;}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+.ic{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;display:inline-block;vertical-align:middle;}
+.ic.fill{fill:currentColor;}
+.screen{width:100%;min-height:100vh;min-height:100dvh;padding-bottom:calc(var(--nav-h) + var(--safe-b) + 20px);display:flex;flex-direction:column;}
+.screen.bare{padding-bottom:calc(var(--safe-b) + 24px);}
+.serif{font-family:var(--font-serif);}
+
+/* ---------- 3. COMPONENTES ---------- */
+/* navegação inferior */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:90;display:flex;
+  background:var(--nav);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+  box-shadow:var(--sh);padding:0 6px var(--safe-b);height:calc(var(--nav-h) + var(--safe-b));}
+.nav-tab{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 2px 4px;color:var(--t3);position:relative;transition:color .2s;-webkit-user-select:none;user-select:none;}
+.nav-tab .ic{width:22px;height:22px;transition:transform .2s var(--ease);}
+.nav-lbl{font-size:10px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;}
+.nav-tab.on{color:var(--acc);}
+.nav-tab.on .ic{transform:translateY(-1px) scale(1.08);}
+.nav-tab.on::before{content:'';position:absolute;top:0;left:50%;width:28px;height:3px;margin-left:-14px;border-radius:0 0 4px 4px;background:var(--acc);box-shadow:0 2px 12px rgba(var(--acc-rgb),.7);}
+.nav-dot{position:absolute;top:6px;left:calc(50% + 6px);width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 2px var(--bg);}
+
+/* barra superior de telas internas */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(14px + var(--safe-t)) 18px 12px;min-height:60px;}
+.topbar h1,.topbar-title{font-size:20px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:10px;}
+.topbar-title .ic{color:var(--acc);}
+.topbar-sub{font-size:12px;color:var(--t3);font-weight:500;margin-top:2px;}
+.icon-btn{width:44px;height:44px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--b2);color:var(--t2);transition:transform .12s,background .15s,color .15s;flex-shrink:0;}
+.icon-btn:active{transform:scale(.92);background:var(--bg3);}
+.icon-btn .ic{width:20px;height:20px;}
+.icon-btn.is-off{color:var(--t3);}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 22px;border-radius:15px;font-weight:700;font-size:15px;letter-spacing:-.1px;border:1px solid var(--b2);background:var(--bg2);color:var(--text);transition:transform .12s,background .15s,opacity .15s,box-shadow .15s;}
+.btn:active{transform:scale(.96);}
+.btn:disabled,.btn[aria-disabled=true]{opacity:.45;pointer-events:none;}
+.btn.primary{background:var(--acc);border-color:transparent;color:var(--on-acc);box-shadow:0 6px 26px rgba(var(--acc-rgb),.34),inset 0 1px 0 rgba(255,255,255,.28);}
+.btn.ghost{background:transparent;}
+.btn.danger{color:rgb(var(--danger));border-color:rgba(var(--danger),.35);background:rgba(var(--danger),.08);}
+.btn.sm{height:40px;padding:0 16px;font-size:13px;border-radius:12px;}
+.btn.block{width:100%;}
+
+/* painéis e linhas */
+.panel{background:var(--bg2);border:1px solid var(--b1);border-radius:20px;overflow:hidden;}
+body.t-light .panel,body.t-light .tile,body.t-light .card-surface{box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(40,20,80,.05);}
+.panel-title{font-size:11px;font-weight:800;color:var(--t3);letter-spacing:2px;text-transform:uppercase;padding:16px 18px 8px;}
+.row{display:flex;align-items:center;gap:14px;width:100%;padding:14px 18px;border-top:1px solid var(--b1);text-align:left;min-height:56px;}
+.panel>.row:first-child{border-top:0;}
+.row-ico{width:36px;height:36px;border-radius:11px;background:rgba(var(--acc-rgb),.1);color:var(--acc);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.row-txt{flex:1;min-width:0;}
+.row-lbl{font-size:15px;font-weight:600;color:var(--text);}
+.row-sub{font-size:12px;color:var(--t3);margin-top:2px;}
+.row-col{flex-direction:column;align-items:stretch;gap:10px;}
+.row.danger .row-lbl{color:rgb(var(--danger));}
+.row.danger .row-ico{background:rgba(var(--danger),.1);color:rgb(var(--danger));}
+button.row:active{background:var(--bg3);}
+.row-chev{color:var(--t3);}
+
+/* interruptor */
+.tog{width:50px;height:30px;border-radius:15px;background:var(--bg3);border:1px solid var(--b2);position:relative;flex-shrink:0;transition:background .22s,border-color .22s;display:inline-block;}
+.tog::after{content:'';position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .22s var(--ease);box-shadow:0 2px 6px rgba(0,0,0,.3);}
+[aria-checked=true]>.tog,.tog.on{background:var(--acc);border-color:transparent;}
+[aria-checked=true]>.tog::after,.tog.on::after{left:23px;}
+
+/* segmentado */
+.seg{display:flex;gap:4px;padding:4px;background:var(--bg3);border-radius:14px;border:1px solid var(--b1);}
+.seg button{flex:1;min-height:40px;border-radius:10px;font-size:13px;font-weight:700;color:var(--t2);transition:background .18s,color .18s;padding:0 6px;}
+.seg button[aria-checked=true]{background:var(--acc);color:var(--on-acc);box-shadow:0 2px 10px rgba(var(--acc-rgb),.3);}
+
+/* temas */
+.themes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.theme-opt{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 4px 8px;border-radius:14px;border:1px solid transparent;font-size:11px;font-weight:700;color:var(--t2);min-height:68px;}
+.theme-opt[aria-checked=true]{border-color:rgba(var(--acc-rgb),.5);background:rgba(var(--acc-rgb),.08);color:var(--text);}
+.tdot{width:34px;height:34px;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.12);}
+.tdot.t-dark{background:radial-gradient(circle at 32% 30%,#e040fb 0 14%,#2d2d2d 15% 40%,#0a0a0a 70%);}
+.tdot.t-oled{background:radial-gradient(circle at 32% 30%,#00e5ff 0 14%,#111 15% 40%,#000 70%);}
+.tdot.t-light{background:radial-gradient(circle at 32% 30%,#6200ea 0 14%,#fff 15% 40%,#e6e0f2 80%);}
+.tdot.t-wine{background:radial-gradient(circle at 32% 30%,#ffd54f 0 14%,#7a0030 15% 45%,#0c0005 80%);}
+
+/* campos */
+.field{width:100%;height:52px;background:var(--bg2);border:1px solid var(--b2);border-radius:15px;padding:0 16px;color:var(--text);font-size:16px;font-weight:500;outline:none;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s,background .2s;}
+.field::placeholder{color:var(--t3);font-weight:400;}
+.field:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.14);}
+.field.bad{border-color:rgb(var(--danger));box-shadow:0 0 0 3px rgba(var(--danger),.14);}
+.field-lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin:0 0 6px 4px;}
+.field-msg{font-size:12px;min-height:18px;margin:2px 4px 0;color:var(--t3);}
+.field-msg.bad{color:rgb(var(--danger));}
+.field-msg.ok{color:rgb(var(--green));}
+body.t-light .field-msg.ok{color:rgb(var(--green));}
+
+/* chips selecionáveis */
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{min-height:38px;padding:0 14px;border-radius:12px;background:var(--bg3);border:1px solid var(--b1);font-size:13px;font-weight:700;color:var(--t2);display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+.chip[aria-checked=true]{background:rgba(var(--acc-rgb),.14);border-color:rgba(var(--acc-rgb),.5);color:var(--acc);}
+.chip:active{transform:scale(.95);}
+
+/* acordeões (details) */
+details.acc{background:var(--bg2);border:1px solid var(--b1);border-radius:20px;overflow:hidden;}
+details.acc>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:0 18px;min-height:58px;cursor:pointer;font-weight:700;font-size:14px;-webkit-user-select:none;user-select:none;}
+details.acc>summary::-webkit-details-marker{display:none;}
+details.acc>summary .ic:first-child{color:var(--acc);}
+details.acc>summary .sum-txt{flex:1;}
+details.acc>summary .sum-badge{font-size:11px;font-weight:800;color:var(--acc);background:rgba(var(--acc-rgb),.12);border-radius:8px;padding:3px 8px;}
+details.acc>summary .chev{color:var(--t3);transition:transform .22s var(--ease);}
+details.acc[open]>summary .chev{transform:rotate(90deg);}
+details.acc[open]>summary{border-bottom:1px solid var(--b1);}
+.acc-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;}
+.acc-body .row{padding-left:2px;padding-right:2px;border-top:1px solid var(--b1);}
+.acc-body .row:first-child{border-top:0;}
+.hint{font-size:12px;color:var(--t3);line-height:1.5;}
+
+/* overlays / bottom sheets */
+.overlay{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:fadeIn .2s ease;}
+body.t-light .overlay{background:rgba(20,10,40,.45);}
+.sheet{width:100%;max-width:480px;max-height:92dvh;overflow-y:auto;background:var(--bg1);border:1px solid var(--b2);border-bottom:0;border-radius:26px 26px 0 0;padding:14px 20px calc(var(--safe-b) + 22px);animation:sheetUp .28s var(--ease);box-shadow:0 -10px 50px rgba(0,0,0,.4);}
+.sheet-handle{width:38px;height:4px;background:var(--b3);border-radius:2px;margin:0 auto 16px;}
+.sheet-title{font-family:var(--font-serif);font-size:1.5rem;font-weight:700;text-align:center;line-height:1.25;margin-bottom:8px;}
+.sheet-text{font-size:14px;color:var(--t2);text-align:center;line-height:1.65;margin:0 auto 18px;max-width:340px;}
+.sheet-eyebrow{font-size:11px;font-weight:800;color:var(--t3);letter-spacing:2.5px;text-transform:uppercase;text-align:center;margin-bottom:12px;}
+.sheet-actions{display:flex;flex-direction:column;gap:8px;}
+.sheet-actions.row2{flex-direction:row;}
+.sheet-actions.row2 .btn{flex:1;padding:0 10px;}
+.sheet-icon{width:54px;height:54px;border-radius:18px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:rgba(var(--acc-rgb),.12);color:var(--acc);border:1px solid rgba(var(--acc-rgb),.25);}
+.sheet-icon .ic{width:26px;height:26px;}
+.sheet-icon.warn{background:rgba(var(--danger),.1);color:rgb(var(--danger));border-color:rgba(var(--danger),.28);}
+
+/* toasts */
+#toasts{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + var(--safe-b) + 14px);z-index:300;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px;}
+.toast{pointer-events:auto;max-width:440px;width:fit-content;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:16px;font-size:13px;font-weight:600;background:var(--bg3);color:var(--text);border:1px solid var(--b3);box-shadow:0 10px 30px rgba(0,0,0,.45);animation:toastIn .28s var(--ease);}
+.toast .ic{color:var(--acc);width:18px;height:18px;}
+.toast.err .ic{color:rgb(var(--danger));}
+.toast.gold{border-color:rgba(var(--gold),.5);background:linear-gradient(135deg,rgba(var(--gold),.16),var(--bg3));}
+.toast.gold .ic{color:rgb(var(--gold));}
+.toast .t-act{margin-left:6px;color:var(--acc);font-weight:800;padding:4px 6px;}
+.toast.out{opacity:0;transform:translateY(8px);transition:all .25s;}
+
+/* ---------- 4. TELAS ---------- */
+/* HOME */
+.hero{position:relative;padding:calc(24px + var(--safe-t)) 22px 14px;overflow:hidden;}
+.hero-rings{position:absolute;right:-26px;top:calc(8px + var(--safe-t));width:190px;height:130px;pointer-events:none;opacity:.9;}
+.eyebrow{font-size:11px;font-weight:700;color:var(--acc);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.eyebrow::before{content:'';width:22px;height:1px;background:var(--acc);opacity:.7;}
+.brand{font-size:clamp(2.8rem,15vw,3.7rem);font-weight:900;letter-spacing:-.045em;line-height:1;margin-top:10px;}
+.brand em{font-family:var(--font-serif);font-style:italic;font-weight:600;color:var(--acc);letter-spacing:-.01em;text-shadow:0 0 36px rgba(var(--acc-rgb),.45);}
+.tagline{font-size:13px;color:var(--t3);margin-top:12px;letter-spacing:.2px;}
+.greet{font-family:var(--font-serif);font-style:italic;font-size:1.02rem;color:var(--t2);margin-top:12px;min-height:1.5em;}
+.home-body{padding:4px 18px 0;display:flex;flex-direction:column;gap:14px;}
+.sec-title{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1.6px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin:0 2px 10px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--b1);}
+
+.days{position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;padding:18px;border-radius:22px;border:1px solid rgba(var(--acc-rgb),.22);
+  background:linear-gradient(135deg,rgba(var(--acc-rgb),.12),rgba(var(--acc-rgb),.03) 60%),var(--bg2);}
+.days::after{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(var(--acc-rgb),.18),transparent 70%);pointer-events:none;}
+.days-ico{width:54px;height:54px;border-radius:18px;background:rgba(var(--acc-rgb),.14);border:1px solid rgba(var(--acc-rgb),.28);color:var(--acc);display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:beat 3.2s ease-in-out infinite;}
+.days-ico .ic{width:26px;height:26px;}
+.days-main{min-width:0;flex:1;position:relative;z-index:1;}
+.days-num{font-size:clamp(1.9rem,10vw,2.4rem);font-weight:900;letter-spacing:-.05em;line-height:1;color:var(--acc);font-variant-numeric:tabular-nums;}
+.days-lbl{font-size:13px;font-weight:700;margin-top:5px;}
+.days-since{font-size:12px;color:var(--t3);margin-top:2px;}
+.days-note{font-family:var(--font-serif);font-style:italic;font-size:.95rem;color:var(--text);text-align:center;margin-top:-6px;padding:0 10px;line-height:1.5;}
+.days.special{border-color:rgba(var(--gold),.55);background:linear-gradient(135deg,rgba(var(--gold),.16),rgba(var(--gold),.04) 60%),var(--bg2);}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.tile{background:var(--bg2);border:1px solid var(--b1);border-radius:18px;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;overflow:hidden;transition:transform .12s;}
+.tile::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,rgba(var(--acc-rgb),.5),transparent);}
+.tile:active{transform:scale(.96);}
+.tile-n{font-size:24px;font-weight:900;letter-spacing:-.04em;line-height:1.1;font-variant-numeric:tabular-nums;}
+.tile-l{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;text-align:center;}
+
+.resume{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:20px;border:1px solid rgba(var(--acc-rgb),.35);background:rgba(var(--acc-rgb),.08);}
+.resume-txt{flex:1;min-width:0;}
+.resume-t{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--acc);}
+.resume-s{font-size:14px;font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.names{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:8px;}
+.names .heart{height:52px;display:flex;align-items:center;color:var(--acc);opacity:.7;}
+.names .field{text-align:center;padding:0 10px;}
+.name-wrap:nth-child(1) .field-lbl::before,.name-wrap:nth-child(3) .field-lbl::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;}
+.name-wrap:nth-child(1) .field-lbl::before{background:rgb(var(--p1));}
+.name-wrap:nth-child(3) .field-lbl::before{background:rgb(var(--p2));}
+
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.mode{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 6px 14px;border-radius:20px;background:var(--bg2);border:1px solid var(--b1);text-align:center;min-height:118px;transition:all .2s var(--ease);overflow:hidden;}
+.mode:active{transform:scale(.95);}
+.mode-ico{width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;background:rgba(var(--m),.1);color:rgb(var(--m));border:1px solid rgba(var(--m),.18);transition:all .2s;}
+.mode-ico .ic{width:24px;height:24px;}
+.mode-name{font-size:13px;font-weight:800;letter-spacing:-.1px;}
+.mode-sub{font-size:11px;color:var(--t3);line-height:1.35;}
+.mode-check{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:rgb(var(--m));color:var(--on-acc);display:flex;align-items:center;justify-content:center;transform:scale(0);transition:transform .22s var(--ease);}
+.mode-check .ic{width:12px;height:12px;stroke-width:3;}
+.mode[data-mode=perg]{--m:var(--m-perg);} .mode[data-mode=vdd]{--m:var(--m-vdd);} .mode[data-mode=en]{--m:var(--m-en);}
+.mode[aria-checked=true]{background:linear-gradient(180deg,rgba(var(--m),.14),rgba(var(--m),.04)),var(--bg2);border-color:rgba(var(--m),.55);box-shadow:0 0 0 1px rgba(var(--m),.18),0 8px 26px rgba(var(--m),.14);}
+.mode[aria-checked=true] .mode-ico{background:rgba(var(--m),.2);}
+.mode[aria-checked=true] .mode-check{transform:scale(1);}
+body.t-light .mode-check{color:#fff;}
+
+.cta{position:sticky;bottom:calc(var(--nav-h) + var(--safe-b) + 10px);z-index:5;padding:14px 0 4px;margin-top:2px;
+  background:linear-gradient(180deg,transparent,var(--bg) 38%);}
+.start-btn{width:100%;height:60px;border-radius:19px;font-size:17px;font-weight:800;letter-spacing:-.3px;background:var(--acc);color:var(--on-acc);
+  display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;
+  box-shadow:0 8px 32px rgba(var(--acc-rgb),.42),inset 0 1px 0 rgba(255,255,255,.3);transition:transform .12s,box-shadow .2s;}
+.start-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.14),transparent 60%);pointer-events:none;}
+.start-btn:active{transform:scale(.97);box-shadow:0 3px 14px rgba(var(--acc-rgb),.3);}
+.start-sub{display:block;font-size:11px;font-weight:600;opacity:.7;letter-spacing:.2px;}
+.start-txt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;}
+.home-footer{font-size:11px;color:var(--t3);text-align:center;padding:10px 0 4px;}
+
+/* perguntas personalizadas */
+.cq-count{font-size:11px;color:var(--t3);text-align:right;margin:4px 4px 0;font-variant-numeric:tabular-nums;}
+.cq-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;overscroll-behavior:contain;}
+.cq-item{display:flex;align-items:flex-start;gap:10px;background:var(--bg3);border:1px solid var(--b1);border-radius:14px;padding:10px 6px 10px 14px;}
+.cq-item-txt{flex:1;min-width:0;font-size:13px;line-height:1.5;color:var(--text);overflow-wrap:anywhere;}
+.cq-item-tag{display:block;font-size:10px;font-weight:800;color:var(--acc);letter-spacing:.9px;text-transform:uppercase;margin-bottom:3px;}
+.cq-del{width:40px;height:40px;border-radius:12px;color:rgb(var(--danger));display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.75;}
+.cq-del:active{background:rgba(var(--danger),.14);}
+.cq-del .ic{width:18px;height:18px;}
+.empty-mini{font-size:13px;color:var(--t3);text-align:center;padding:14px 8px;line-height:1.6;}
+
+/* FAVORITAS / CONQUISTAS / HISTÓRICO */
+.list-wrap{padding:4px 18px 8px;display:flex;flex-direction:column;gap:10px;flex:1;}
+.filters{display:flex;gap:6px;padding:0 18px 10px;overflow-x:auto;scrollbar-width:none;}
+.filters::-webkit-scrollbar{display:none;}
+.filters .chip{flex-shrink:0;}
+.fav{position:relative;border-radius:20px;padding:16px 8px 14px 18px;background:linear-gradient(135deg,rgba(var(--lv),.08),transparent 55%),var(--bg2);border:1px solid var(--b1);border-left:3px solid rgb(var(--lv));display:flex;gap:6px;animation:slideUp .3s var(--ease) both;}
+.fav-body{flex:1;min-width:0;}
+.fav-tag{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:rgb(var(--lv));margin-bottom:8px;}
+.fav-tag .ic{width:13px;height:13px;}
+.fav-q{font-family:var(--font-serif);font-size:1.02rem;line-height:1.65;font-weight:600;overflow-wrap:anywhere;}
+.fav-del{width:44px;height:44px;border-radius:14px;color:var(--t3);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fav-del:active{background:rgba(var(--danger),.14);color:rgb(var(--danger));}
+.lv-leve{--lv:var(--yel);} .lv-medio{--lv:var(--acc-rgb);} .lv-picante{--lv:var(--red);} .lv-x{--lv:var(--acc-rgb);}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:40px 30px 60px;}
+.empty-ico{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--acc);background:radial-gradient(circle,rgba(var(--acc-rgb),.18),rgba(var(--acc-rgb),.04) 70%);border:1px solid rgba(var(--acc-rgb),.25);margin-bottom:6px;}
+.empty-ico .ic{width:38px;height:38px;}
+.empty h2{font-family:var(--font-serif);font-size:1.4rem;font-weight:700;}
+.empty p{font-size:14px;color:var(--t2);line-height:1.65;max-width:280px;margin-bottom:10px;}
+
+.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 18px 12px;}
+.sum-grid .tile-n{font-size:20px;}
+.conq-ring{display:flex;align-items:center;gap:14px;margin:0 18px 12px;padding:16px 18px;border-radius:20px;background:var(--bg2);border:1px solid var(--b1);}
+.conq-ring-n{font-size:30px;font-weight:900;letter-spacing:-.04em;color:var(--acc);line-height:1;}
+.conq-ring-t{flex:1;font-size:13px;color:var(--t2);line-height:1.5;}
+.bar{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;}
+.bar>i{display:block;height:100%;border-radius:3px;background:var(--acc);transition:width .5s var(--ease);}
+.conq{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;background:var(--bg2);border:1px solid var(--b1);}
+.conq-ico{width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg3);color:var(--t3);}
+.conq-ico .ic{width:22px;height:22px;}
+.conq-info{flex:1;min-width:0;}
+.conq-name{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.conq-desc{font-size:12px;color:var(--t3);margin-top:3px;line-height:1.45;}
+.conq .bar{margin-top:8px;}
+.conq.done{background:linear-gradient(135deg,rgba(var(--gold),.12),transparent 60%),var(--bg2);border-color:rgba(var(--gold),.35);}
+.conq.done .conq-ico{background:rgba(var(--gold),.16);color:rgb(var(--gold));box-shadow:0 0 18px rgba(var(--gold),.22);}
+.conq.done .conq-name .ic{color:rgb(var(--gold));width:16px;height:16px;}
+.conq.locked{opacity:.92;}
+
+.hist{background:var(--bg2);border:1px solid var(--b1);border-radius:20px;padding:14px 8px 14px 16px;display:flex;gap:6px;animation:slideUp .3s var(--ease) both;}
+.hist-body{flex:1;min-width:0;}
+.hist-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+.hist-mode{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;}
+.hist-date{font-size:11px;color:var(--t3);font-weight:600;}
+.hist-names{font-size:12px;color:var(--t2);margin-top:3px;}
+.hist-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.pill-s{font-size:11px;font-weight:700;color:var(--t2);background:var(--bg3);border-radius:8px;padding:4px 9px;display:inline-flex;align-items:center;gap:5px;}
+.pill-s .ic{width:12px;height:12px;}
+.pill-s.acc{color:var(--acc);background:rgba(var(--acc-rgb),.12);}
+
+.set-wrap{padding:4px 18px 8px;display:flex;flex-direction:column;gap:14px;}
+.set-names{padding:4px 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.set-names .field{height:48px;}
+.about{font-size:12px;color:var(--t3);text-align:center;padding:6px 0 10px;line-height:1.7;}
+
+/* RESUMO */
+.sum{padding:calc(36px + var(--safe-t)) 20px 0;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;overflow:hidden;}
+.sum-badge{width:84px;height:84px;border-radius:28px;display:flex;align-items:center;justify-content:center;background:rgba(var(--acc-rgb),.14);border:1px solid rgba(var(--acc-rgb),.35);color:var(--acc);box-shadow:0 0 50px rgba(var(--acc-rgb),.3);animation:popIn .5s var(--ease) both;}
+.sum-badge .ic{width:40px;height:40px;}
+.sum h1{font-family:var(--font-serif);font-size:2rem;font-weight:700;margin-top:20px;letter-spacing:-.01em;line-height:1.15;animation:slideUp .5s .08s var(--ease) both;}
+.sum-names{font-size:13px;color:var(--t2);margin-top:6px;font-weight:600;animation:slideUp .5s .12s var(--ease) both;}
+.sum-msg{font-family:var(--font-serif);font-style:italic;font-size:1.05rem;line-height:1.65;color:var(--t2);max-width:320px;margin:16px auto 22px;animation:slideUp .5s .18s var(--ease) both;}
+.sum-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;width:100%;margin-bottom:12px;}
+.sum-stats .tile{animation:slideUp .5s var(--ease) both;}
+.sum-stats .tile:nth-child(2){animation-delay:.06s}.sum-stats .tile:nth-child(3){animation-delay:.12s}.sum-stats .tile:nth-child(4){animation-delay:.18s}
+.sum-scores{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-bottom:12px;}
+.sum-sc{padding:16px 10px;border-radius:20px;background:var(--bg2);border:1px solid var(--b2);}
+.sum-sc.win{border-color:rgba(var(--gold),.55);box-shadow:0 0 28px rgba(var(--gold),.14);}
+.sum-sc-n{font-size:11px;font-weight:800;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:6px;}
+.sum-sc-v{font-size:34px;font-weight:900;letter-spacing:-.04em;margin-top:4px;line-height:1;}
+.sum-conq{width:100%;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;text-align:left;}
+.sum-actions{width:100%;display:flex;flex-direction:column;gap:10px;margin-top:8px;}
+.sparks{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.sparks i{position:absolute;bottom:-12px;width:7px;height:7px;border-radius:50%;background:rgb(var(--acc-rgb));opacity:0;animation:floatUp 4.5s ease-out infinite;}
+
+/* ---------- 5. JOGO ---------- */
+.game{--l1:var(--yel);--l2:var(--acc-rgb);--l3:var(--red);}
+.game[data-mode=vdd]{--l1:var(--cyan);--l2:var(--green);--l3:var(--orange);}
+.g-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(10px + var(--safe-t)) 14px 6px 18px;}
+.g-couple{min-width:0;}
+.g-couple-n{font-size:16px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;}
+.g-mode{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1.4px;text-transform:uppercase;display:block;margin-top:1px;}
+.g-actions{display:flex;gap:6px;flex-shrink:0;}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:6px 16px 4px;}
+.tab{height:48px;border-radius:14px;border:1px solid var(--b1);background:var(--bg2);color:var(--t3);font-size:11px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .18s var(--ease);}
+.tab .ic{width:16px;height:16px;}
+.tab:active{transform:scale(.94);}
+.tab[aria-selected=true]{background:rgba(var(--tc),.14);border-color:rgba(var(--tc),.5);color:rgb(var(--tc));box-shadow:0 0 18px rgba(var(--tc),.12);}
+.tab[data-level=leve]{--tc:var(--l1);} .tab[data-level=medio]{--tc:var(--l2);} .tab[data-level=picante]{--tc:var(--l3);} .tab[data-level=mix]{--tc:var(--acc-rgb);}
+.g-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px 4px 20px;}
+.g-count{font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.4px;font-variant-numeric:tabular-nums;}
+.g-bar-r{display:flex;gap:6px;}
+.chip-btn{height:40px;padding:0 13px;border-radius:12px;background:var(--bg2);border:1px solid var(--b2);color:var(--t2);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:7px;transition:all .15s;}
+.chip-btn:active{transform:scale(.94);}
+.chip-btn:disabled,.chip-btn[aria-disabled=true]{opacity:.4;pointer-events:none;}
+.chip-btn .ic{width:16px;height:16px;}
+.pill{font-size:11px;font-weight:800;background:rgba(var(--yel),.16);color:rgb(var(--yel));border-radius:7px;padding:2px 7px;min-width:22px;text-align:center;}
+
+.stage{flex:1;display:flex;align-items:center;padding:8px 16px;min-height:300px;touch-action:pan-y;}
+.card{--lv:var(--l1);position:relative;width:100%;min-height:clamp(290px,40dvh,430px);border-radius:26px;padding:22px 24px 20px;display:flex;flex-direction:column;overflow:hidden;
+  background:radial-gradient(120% 70% at 85% -10%,rgba(var(--lv),.16),transparent 62%),radial-gradient(90% 60% at 0% 110%,rgba(var(--lv),.07),transparent 65%),var(--bg1);
+  background:radial-gradient(120% 70% at 85% -10%,rgba(var(--lv),.16),transparent 62%),radial-gradient(90% 60% at 0% 110%,rgba(var(--lv),.07),transparent 65%),color-mix(in srgb,rgb(var(--lv)) 5%,var(--bg1));
+  border:1px solid rgba(var(--lv),.42);box-shadow:0 0 38px rgba(var(--lv),.1),var(--card-shadow);
+  will-change:transform,opacity;transition:border-color .3s,box-shadow .3s;}
+.card::before{content:'';position:absolute;inset:7px;border-radius:20px;border:1px solid rgba(var(--lv),.14);pointer-events:none;}
+.card::after{content:'\201C';position:absolute;left:18px;bottom:-34px;font-family:var(--font-serif);font-size:150px;line-height:1;color:rgb(var(--lv));opacity:.07;pointer-events:none;}
+.card[data-level=leve]{--lv:var(--l1);} .card[data-level=medio]{--lv:var(--l2);} .card[data-level=picante]{--lv:var(--l3);}
+.card[data-kind=coringa]{--lv:var(--gold);background:radial-gradient(120% 80% at 80% -10%,rgba(var(--gold),.2),transparent 60%),linear-gradient(150deg,#1d0a30,#2c0a1c);border-color:rgba(var(--gold),.6);}
+body.t-light .card[data-kind=coringa]{background:radial-gradient(120% 80% at 80% -10%,rgba(var(--gold),.2),transparent 60%),linear-gradient(150deg,#fff6e0,#ffe9f0);}
+.card-orb{position:absolute;width:190px;height:190px;border-radius:50%;top:-70px;right:-60px;background:radial-gradient(circle,rgba(var(--lv),.2),transparent 70%);pointer-events:none;}
+.card[data-level=picante]:not([data-kind=coringa]),.card[data-kind=coringa]{animation:glowPulse 4s ease-in-out infinite;}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:1;}
+.badge{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px 0 10px;border-radius:10px;background:rgba(var(--lv),.12);border:1px solid rgba(var(--lv),.3);color:rgb(var(--lv));font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;}
+.badge .ic{width:15px;height:15px;}
+.card-meta{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.6px;text-transform:uppercase;}
+.card-meta .ic{width:14px;height:14px;color:rgb(var(--lv));}
+.card-mid{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:18px 0 14px;position:relative;z-index:1;gap:16px;}
+.turn{display:inline-flex;align-items:center;gap:9px;padding:7px 14px 7px 11px;border-radius:999px;background:var(--bg3);border:1px solid var(--b2);font-size:12px;font-weight:700;color:var(--t2);}
+.turn b{color:var(--text);font-weight:800;}
+.turn .dot{width:9px;height:9px;border-radius:50%;background:rgb(var(--tp,var(--acc-rgb)));box-shadow:0 0 10px rgba(var(--tp,var(--acc-rgb)),.8);}
+.turn.big{font-size:14px;padding:9px 18px 9px 14px;background:rgba(var(--tp),.12);border-color:rgba(var(--tp),.5);color:var(--t2);}
+.turn.big .dot{width:11px;height:11px;}
+.card-q{font-family:var(--font-serif);font-weight:600;line-height:1.55;color:var(--text);font-size:1.3rem;overflow-wrap:break-word;hyphens:auto;max-width:100%;text-wrap:balance;}
+.card[data-size="m"] .card-q{font-size:1.17rem;line-height:1.6;}
+.card[data-size="l"] .card-q{font-size:1.05rem;line-height:1.65;}
+.card[data-size="xl"] .card-q{font-size:.98rem;line-height:1.7;}
+.card-hint{font-size:11.5px;color:var(--t3);text-align:center;font-weight:500;position:relative;z-index:1;min-height:16px;}
+
+.g-dock{padding:14px 16px 0;display:flex;flex-direction:column;gap:10px;position:sticky;bottom:calc(var(--nav-h) + var(--safe-b));z-index:4;background:linear-gradient(180deg,transparent 0,var(--bg) 16px);}
+.timer{display:flex;align-items:center;gap:12px;padding:0 4px;}
+.timer-bg{flex:1;height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;}
+.timer-fill{height:100%;border-radius:3px;background:var(--acc);transition:width .25s linear,background .3s;}
+.timer.low .timer-fill{background:rgb(var(--red));}
+.timer.low .timer-txt{color:rgb(var(--red));animation:tick 1s infinite;}
+.timer-txt{font-size:13px;font-weight:800;color:var(--t2);min-width:28px;text-align:right;font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:flex-end;gap:4px;}
+.timer-txt .ic{width:14px;height:14px;}
+.scores{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 16px 0;}
+.sc{display:flex;align-items:center;gap:6px;padding:8px 6px 8px 12px;border-radius:16px;background:var(--bg2);border:1px solid var(--b1);transition:border-color .2s,box-shadow .2s;}
+.sc.turn-on{border-color:rgba(var(--tp),.6);box-shadow:0 0 0 1px rgba(var(--tp),.2),0 4px 20px rgba(var(--tp),.12);}
+.sc-info{flex:1;min-width:0;}
+.sc-name{font-size:10px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;}
+.sc-name::before{content:'';width:6px;height:6px;border-radius:50%;background:rgb(var(--tp));flex-shrink:0;}
+.sc-val{font-size:26px;font-weight:900;letter-spacing:-.04em;line-height:1.05;font-variant-numeric:tabular-nums;}
+.sc-val.bump{animation:bump .3s var(--ease);}
+.sc-btns{display:flex;flex-direction:column;gap:4px;}
+.sc-btn{width:38px;height:30px;border-radius:9px;background:var(--bg3);border:1px solid var(--b2);color:var(--t2);display:flex;align-items:center;justify-content:center;}
+.sc-btn:active{transform:scale(.88);background:rgba(var(--acc-rgb),.2);}
+.sc-btn .ic{width:16px;height:16px;stroke-width:2.4;}
+.sc-btn:disabled{opacity:.35;}
+.sc-1{--tp:var(--p1);} .sc-2{--tp:var(--p2);}
+.actions{display:grid;grid-template-columns:56px 56px 1fr;gap:8px;}
+.act{height:58px;border-radius:17px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--b2);color:var(--t2);transition:transform .12s,background .15s,color .15s;}
+.act:active{transform:scale(.92);}
+.act .ic{width:22px;height:22px;}
+.act:disabled{opacity:.35;pointer-events:none;}
+.act.fav.on{color:#ff5c8a;background:rgba(255,92,138,.12);border-color:rgba(255,92,138,.45);}
+.act.fav.on .ic{fill:currentColor;}
+.act.fav.pop .ic{animation:heartPop .45s var(--ease);}
+.btn-next{height:58px;border-radius:17px;font-size:16px;font-weight:800;letter-spacing:-.2px;display:flex;align-items:center;justify-content:center;gap:9px;
+  background:rgb(var(--nx,var(--acc-rgb)));color:var(--on-acc);box-shadow:0 6px 24px rgba(var(--nx,var(--acc-rgb)),.34),inset 0 1px 0 rgba(255,255,255,.3);transition:transform .12s,box-shadow .2s,background .3s;}
+.btn-next:active{transform:scale(.97);}
+.btn-next .ic{width:20px;height:20px;stroke-width:2.4;}
+body.t-light .btn-next{color:#fff;}
+.progress{height:4px;border-radius:2px;background:var(--bg3);overflow:hidden;margin:2px 4px 0;}
+.progress>i{display:block;height:100%;width:0;border-radius:2px;background:rgb(var(--nx,var(--acc-rgb)));transition:width .4s var(--ease),background .3s;}
+.g-spacer{height:6px;}
+@media (max-height:480px){.g-dock{position:static;background:none;padding-top:6px;}}
+
+.game[data-lv=leve]{--nx:var(--l1);} .game[data-lv=medio]{--nx:var(--l2);} .game[data-lv=picante]{--nx:var(--l3);} .game[data-lv=coringa]{--nx:var(--gold);}
+
+/* transição de cartas */
+.card.out-l{animation:outL .14s ease-in forwards;} .card.out-r{animation:outR .14s ease-in forwards;}
+.card.in-r{animation:inR .26s var(--ease);} .card.in-l{animation:inL .26s var(--ease);}
+.card.deal{animation:deal .5s var(--ease);}
+
+/* roleta */
+.wheel-box{position:relative;width:208px;height:208px;margin:6px auto 14px;}
+.wheel-ptr{position:absolute;top:-14px;left:50%;margin-left:-13px;width:26px;height:26px;z-index:3;color:var(--text);filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));}
+.wheel{position:absolute;inset:0;border-radius:50%;border:3px solid var(--b3);overflow:hidden;
+  background:conic-gradient(rgba(var(--p1),.34) 0deg 180deg,rgba(var(--p2),.34) 180deg 360deg);
+  box-shadow:0 0 0 6px var(--bg2),0 14px 40px rgba(0,0,0,.45),inset 0 0 40px rgba(0,0,0,.25);
+  transition:transform 3.6s cubic-bezier(.12,.72,.08,1);}
+.wheel::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--b3);}
+.wheel-l{position:absolute;top:50%;transform:translateY(-50%);max-width:36%;font-size:13px;font-weight:800;line-height:1.2;overflow-wrap:anywhere;text-align:center;z-index:1;}
+.wheel-l.l0{right:6%;} .wheel-l.l1{left:6%;}
+.wheel-hub{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:var(--bg1);border:2px solid var(--b3);z-index:2;display:flex;align-items:center;justify-content:center;color:var(--acc);}
+.wheel-hub .ic{width:20px;height:20px;}
+.wheel-res{font-family:var(--font-serif);font-size:1.9rem;font-weight:700;text-align:center;color:var(--acc);min-height:2.6rem;line-height:1.3;margin-bottom:2px;overflow-wrap:anywhere;}
+.wheel-res.pop{animation:popIn .4s var(--ease);}
+.wheel-note{font-size:12px;color:var(--t3);text-align:center;min-height:18px;margin-bottom:14px;}
+
+/* ---------- 6. ANIMAÇÕES E MOVIMENTO ---------- */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes beat{0%,100%{transform:scale(1)}8%{transform:scale(1.1)}16%{transform:scale(1)}24%{transform:scale(1.07)}32%{transform:scale(1)}}
+@keyframes heartPop{0%{transform:scale(1)}35%{transform:scale(1.5)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
+@keyframes tick{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+@keyframes outL{to{opacity:0;transform:translateX(-34px) scale(.98)}}
+@keyframes outR{to{opacity:0;transform:translateX(34px) scale(.98)}}
+@keyframes inR{from{opacity:0;transform:translateX(34px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-34px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes deal{0%{opacity:0;transform:translateY(24px) scale(.94)}100%{opacity:1;transform:none}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 34px rgba(var(--lv),.1),var(--card-shadow)}50%{box-shadow:0 0 58px rgba(var(--lv),.22),var(--card-shadow)}}
+@keyframes floatUp{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.8}100%{transform:translateY(-110vh) scale(1.2);opacity:0}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
+}
+body.calm *,body.calm *::before,body.calm *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
+.sparks{display:block;} body.calm .sparks{display:none;}
+
+/* telas pequenas */
+@media (max-width:360px){
+  .hero{padding-left:18px;padding-right:18px;}
+  .home-body{padding-left:14px;padding-right:14px;gap:14px;}
+  .tile-n{font-size:21px;} .mode{padding:14px 4px 12px;min-height:120px;} .mode-sub{font-size:10.5px;}
+  .tab{font-size:10px;height:46px;} .g-top{padding-left:14px;}
+  .card{padding:18px 18px 16px;} .stage{padding:6px 12px;}
+  .g-dock{padding-left:12px;padding-right:12px;} .actions{grid-template-columns:52px 52px 1fr;}
+  .list-wrap,.set-wrap{padding-left:14px;padding-right:14px;}
+}
+@media (max-height:640px){
+  .g-mode{display:none;} .tab{height:40px;} .g-top{padding-top:calc(6px + var(--safe-t));} .g-bar{padding-top:4px;} .sc{padding-top:5px;padding-bottom:5px;} .sc-val{font-size:22px;} .sc-btn{height:26px;}
+  .stage{min-height:250px;} .card{min-height:250px;padding-top:16px;padding-bottom:14px;}
+  .card-mid{padding:10px 0 8px;gap:10px;}
+  .hero{padding-top:calc(22px + var(--safe-t));}
+}
+@media (min-width:600px){
+  body{padding:0;}
+  #app{box-shadow:0 0 0 1px var(--b1);min-height:100dvh;background:rgba(0,0,0,.0);}
+}
+</style>
+</head>
+<body class="t-dark">
+
+<!-- ÍCONES (sprite SVG, traço consistente) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10.5 9-7.5 9 7.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22v-9h6v9"/></symbol>
+  <symbol id="i-cards" viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="17" rx="2.5"/><path d="M8 2.5h10.5A2.5 2.5 0 0 1 21 5v13"/><path d="M9.5 12.5a1.6 1.6 0 0 1 2.8-1.1 1.6 1.6 0 0 1 .4 2.3l-2.2 2.4-2.2-2.4a1.6 1.6 0 0 1 1.2-1.2z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.5 3.1 6.3 6.9 1-5 4.9 1.2 6.9-6.2-3.3-6.2 3.3L8 14.7 3 9.8l6.9-1z"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.7V17c0 .6-.5 1-1.2 1.2C7.9 18.8 7 20.2 7 22M14 14.7V17c0 .6.5 1 1.2 1.2 .9.6 1.8 2 1.8 3.8M18 2H6v7a6 6 0 0 0 12 0z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-vol" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></symbol>
+  <symbol id="i-volx" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="14" r="8"/><path d="m12 14 3-3M10 2h4"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 12.5h5"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M10 5.1A10.4 10.4 0 0 1 12 5c7 0 10 7 10 7a13 13 0 0 1-1.7 2.7M6.6 6.6A13.500 13.500 0 0 0 2 12s3 7 10 7a9.700 9.700 0 0 0 5.400-1.600M9.900 9.900a3 3 0 1 0 4.200 4.200M2 2l20 20"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.500 14.500A2.500 2.500 0 0 0 11 12c0-1.400-.5-2-1-3-1.100-2.100-.2-4 2-6 .5 2.500 2 4.900 4 6.500 2 1.600 3 3.500 3 5.500a7 7 0 1 1-14 0c0-1.100.4-2.300 1-3a2.500 2.500 0 0 0 2.500 2.500z"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
+  <symbol id="i-lips" viewBox="0 0 24 24"><path d="M2.500 12c2.800-3.200 5.800-3.800 9.500-1.700 3.700-2.100 6.700-1.500 9.500 1.700-2.800 5-6.200 6.800-9.500 6.800S5.300 17 2.500 12z"/><path d="M2.500 12h19"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2.500"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.800 2.800 0 1 1 4 4L7.500 20.500 2 22l1.500-5.500z"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m12 3-1.900 5.800a2 2 0 0 1-1.300 1.300L3 12l5.800 1.900a2 2 0 0 1 1.300 1.300L12 21l1.900-5.800a2 2 0 0 1 1.300-1.300L21 12l-5.800-1.900a2 2 0 0 1-1.300-1.300z"/></symbol>
+  <symbol id="i-skip" viewBox="0 0 24 24"><path d="m5 4 10 8-10 8zM19 5v14"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.500a5.500 5.500 0 0 1 0 11H11"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></symbol>
+  <symbol id="i-crown" viewBox="0 0 24 24"><path d="m2 5 4.500 5L12 3l5.500 7L22 5l-2 14H4zM4 22h16"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4.500" width="18" height="17" rx="3"/><path d="M3 10h18M8 2.500v4M16 2.500v4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.500"/><path d="M2.500 20a6.500 6.500 0 0 1 13 0M16 4.700a3.500 3.500 0 0 1 0 6.600M18.500 14.500a6.500 6.500 0 0 1 3 5.500"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m6 4 14 8-14 8z"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.700L3 8M3 3v5h5M12 7v5l3 2"/></symbol>
+  <symbol id="i-motion" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 22V4M5 4h12l-2 4 2 4H5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7zM2 12l10 5 10-5M2 17l10 5 10-5"/></symbol>
+</svg>
+
+<div id="toasts" aria-live="polite" aria-atomic="false"></div>
+<p class="sr" id="liveCard" aria-live="polite"></p>
+
+<main id="app">
+
+  <!-- ======================= INÍCIO ======================= -->
+  <section class="screen" id="screen-home" aria-label="Início">
+    <header class="hero">
+      <svg class="hero-rings" viewBox="0 0 190 130" fill="none" aria-hidden="true">
+        <defs><linearGradient id="rg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="rgb(255,213,79)" stop-opacity=".75"/><stop offset="1" stop-color="rgb(255,213,79)" stop-opacity=".05"/></linearGradient>
+        <linearGradient id="rg2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgb(255,122,170)" stop-opacity=".75"/><stop offset="1" stop-color="rgb(255,122,170)" stop-opacity=".05"/></linearGradient></defs>
+        <circle cx="78" cy="62" r="46" stroke="url(#rg1)" stroke-width="1.5"/>
+        <circle cx="118" cy="62" r="46" stroke="url(#rg2)" stroke-width="1.5"/>
+        <path d="M98 22a46 46 0 0 1 0 80 46 46 0 0 1 0-80z" fill="rgba(224,64,251,.12)" stroke="rgba(224,64,251,.35)" stroke-width="1"/>
+      </svg>
+      <p class="eyebrow">jogo de casal</p>
+      <h1 class="brand">Para <em>dois</em></h1>
+      <p class="tagline">aproximar · revelar · inflamar</p>
+      <p class="greet" id="greet"></p>
+    </header>
+
+    <div class="home-body">
+      <!-- dias juntos -->
+      <section class="days" id="daysCard" aria-label="Tempo juntos">
+        <div class="days-ico"><svg class="ic fill"><use href="#i-heart"/></svg></div>
+        <div class="days-main">
+          <div class="days-num" id="daysNum">—</div>
+          <div class="days-lbl">dias juntos</div>
+          <div class="days-since" id="daysSince">desde 07/04/2023</div>
+        </div>
+      </section>
+      <p class="days-note hidden" id="daysNote"></p>
+
+      <!-- estatísticas do casal -->
+      <div class="stats" aria-label="Estatísticas do casal">
+        <button class="tile" data-act="go" data-arg="conquistas" aria-label="Cartas vistas — ver conquistas"><span class="tile-n" id="statCartas">0</span><span class="tile-l">cartas vistas</span></button>
+        <button class="tile" data-act="go" data-arg="history" aria-label="Sessões — ver histórico"><span class="tile-n" id="statSessoes">0</span><span class="tile-l">sessões</span></button>
+        <button class="tile" data-act="go" data-arg="favs" aria-label="Favoritas — ver lista"><span class="tile-n" id="statFavs">0</span><span class="tile-l">favoritas</span></button>
+      </div>
+
+      <!-- partida em andamento -->
+      <div class="resume hidden" id="resumeCard" role="group" aria-label="Partida em andamento">
+        <div class="resume-txt"><div class="resume-t">Partida em andamento</div><div class="resume-s" id="resumeInfo"></div></div>
+        <button class="btn primary sm" data-act="resume">Continuar</button>
+      </div>
+
+      <!-- nomes -->
+      <section aria-labelledby="t-names">
+        <h2 class="sec-title" id="t-names">vocês dois</h2>
+        <div class="names">
+          <div class="name-wrap"><label class="field-lbl" for="name1">Você</label><input class="field" id="name1" data-name="0" placeholder="Seu nome" maxlength="14" autocomplete="off" autocapitalize="words" enterkeyhint="next"></div>
+          <div class="heart"><svg class="ic fill"><use href="#i-heart"/></svg></div>
+          <div class="name-wrap"><label class="field-lbl" for="name2">Seu amor</label><input class="field" id="name2" data-name="1" placeholder="Nome do amor" maxlength="14" autocomplete="off" autocapitalize="words" enterkeyhint="done"></div>
+        </div>
+      </section>
+
+      <!-- modos -->
+      <section aria-labelledby="t-modes">
+        <h2 class="sec-title" id="t-modes">modo de jogo</h2>
+        <div class="modes" role="radiogroup" aria-label="Modo de jogo" id="modes">
+          <button class="mode" role="radio" data-act="mode" data-arg="perg" data-mode="perg" aria-checked="true">
+            <span class="mode-check"><svg class="ic"><use href="#i-check"/></svg></span>
+            <span class="mode-ico"><svg class="ic"><use href="#i-chat"/></svg></span>
+            <span class="mode-name">Perguntas</span><span class="mode-sub">leve, médio ou picante</span>
+          </button>
+          <button class="mode" role="radio" data-act="mode" data-arg="vdd" data-mode="vdd" aria-checked="false">
+            <span class="mode-check"><svg class="ic"><use href="#i-check"/></svg></span>
+            <span class="mode-ico"><svg class="ic"><use href="#i-cards"/></svg></span>
+            <span class="mode-name">V ou D</span><span class="mode-sub">verdade ou desafio</span>
+          </button>
+          <button class="mode" role="radio" data-act="mode" data-arg="en" data-mode="en" aria-checked="false">
+            <span class="mode-check"><svg class="ic"><use href="#i-check"/></svg></span>
+            <span class="mode-ico"><svg class="ic"><use href="#i-eyeoff"/></svg></span>
+            <span class="mode-name">Eu nunca</span><span class="mode-sub">confesse ou beba</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- áreas secundárias -->
+      <details class="acc" id="accGame">
+        <summary><svg class="ic"><use href="#i-sliders"/></svg><span class="sum-txt">Ajustes da partida</span><span class="sum-badge" id="gameBadge"></span><svg class="ic chev"><use href="#i-chev"/></svg></summary>
+        <div class="acc-body" data-controls="game"></div>
+      </details>
+
+      <details class="acc" id="accCustom">
+        <summary><svg class="ic"><use href="#i-pencil"/></svg><span class="sum-txt">Perguntas personalizadas</span><span class="sum-badge hidden" id="cqBadge">0</span><svg class="ic chev"><use href="#i-chev"/></svg></summary>
+        <div class="acc-body">
+          <div>
+            <label class="field-lbl" for="cqText">Nova pergunta</label>
+            <input class="field" id="cqText" maxlength="220" placeholder="Escreva algo que só vocês dois fariam…" autocomplete="off" enterkeyhint="done" aria-describedby="cqMsg">
+            <div class="cq-count"><span id="cqLen">0</span>/220</div>
+          </div>
+          <div>
+            <div class="field-lbl" id="cqDestLbl">Entra em</div>
+            <div class="chips" role="radiogroup" aria-labelledby="cqDestLbl" id="cqDest">
+              <button class="chip" role="radio" data-act="cqDest" data-arg="perg" aria-checked="true">Perguntas</button>
+              <button class="chip" role="radio" data-act="cqDest" data-arg="verdade" aria-checked="false">Verdade</button>
+              <button class="chip" role="radio" data-act="cqDest" data-arg="desafio" aria-checked="false">Desafio</button>
+              <button class="chip" role="radio" data-act="cqDest" data-arg="en" aria-checked="false">Eu nunca</button>
+            </div>
+          </div>
+          <div>
+            <div class="field-lbl" id="cqLvlLbl">Nível</div>
+            <div class="chips" role="radiogroup" aria-labelledby="cqLvlLbl" id="cqLevel">
+              <button class="chip" role="radio" data-act="cqLevel" data-arg="all" aria-checked="true">Todos</button>
+              <button class="chip" role="radio" data-act="cqLevel" data-arg="leve" aria-checked="false">Leve</button>
+              <button class="chip" role="radio" data-act="cqLevel" data-arg="medio" aria-checked="false">Médio</button>
+              <button class="chip" role="radio" data-act="cqLevel" data-arg="picante" aria-checked="false">Picante</button>
+            </div>
+          </div>
+          <button class="btn primary block" data-act="cqAdd"><svg class="ic"><use href="#i-plus"/></svg>Adicionar pergunta</button>
+          <p class="field-msg" id="cqMsg" role="status" aria-live="polite"></p>
+          <div class="cq-list" id="cqList"></div>
+          <p class="hint">As perguntas ficam salvas neste aparelho e entram nas próximas partidas.</p>
+        </div>
+      </details>
+
+      <details class="acc" id="accLook">
+        <summary><svg class="ic"><use href="#i-moon"/></svg><span class="sum-txt">Aparência e som</span><svg class="ic chev"><use href="#i-chev"/></svg></summary>
+        <div class="acc-body" data-controls="look"></div>
+      </details>
+
+      <div class="cta">
+        <button class="start-btn" data-act="start" id="startBtn">
+          <svg class="ic"><use href="#i-sparkle"/></svg>
+          <span class="start-txt"><span id="startLbl">Começar</span><span class="start-sub" id="startSub">Perguntas · Leve</span></span>
+        </button>
+      </div>
+      <p class="home-footer">feito com <svg class="ic fill" style="width:11px;height:11px;color:rgb(var(--p2))"><use href="#i-heart"/></svg> para vocês dois</p>
+    </div>
+  </section>
+
+  <!-- ======================= JOGO (todos os modos) ======================= -->
+  <section class="screen game hidden" id="screen-game" data-mode="perg" data-lv="leve" aria-label="Partida">
+    <div class="g-top">
+      <div class="g-couple"><span class="g-couple-n" id="gCouple">—</span><span class="g-mode" id="gMode">Perguntas</span></div>
+      <div class="g-actions">
+        <button class="icon-btn" id="btnSound" data-act="soundGame" aria-label="Efeitos sonoros"><svg class="ic"><use href="#i-vol"/></svg></button>
+        <button class="icon-btn" data-act="roleta" aria-label="Roleta: quem responde?"><svg class="ic"><use href="#i-dice"/></svg></button>
+        <button class="icon-btn" data-act="endAsk" aria-label="Encerrar partida"><svg class="ic"><use href="#i-close"/></svg></button>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Nível das cartas" id="gTabs">
+      <button class="tab" role="tab" data-act="level" data-arg="leve" data-level="leve"><svg class="ic"><use href="#i-moon"/></svg>Leve</button>
+      <button class="tab" role="tab" data-act="level" data-arg="medio" data-level="medio"><svg class="ic"><use href="#i-flame"/></svg>Médio</button>
+      <button class="tab" role="tab" data-act="level" data-arg="picante" data-level="picante"><svg class="ic"><use href="#i-lips"/></svg>Picante</button>
+      <button class="tab" role="tab" data-act="level" data-arg="mix" data-level="mix"><svg class="ic"><use href="#i-shuffle"/></svg>Misto</button>
+    </div>
+
+    <div class="g-bar">
+      <span class="g-count" id="gCount">1 / 25</span>
+      <div class="g-bar-r">
+        <button class="chip-btn" data-act="shuffleDeck" aria-label="Embaralhar as cartas restantes" title="Embaralhar as cartas restantes"><svg class="ic"><use href="#i-shuffle"/></svg></button>
+        <button class="chip-btn" id="skipBtn" data-act="skip" aria-label="Pular carta"><svg class="ic"><use href="#i-skip"/></svg>Pular <span class="pill" id="skipPill">3</span></button>
+      </div>
+    </div>
+
+    <div class="scores hidden" id="scores" aria-label="Placar">
+        <div class="sc sc-1" id="sc0"><div class="sc-info"><div class="sc-name" id="scName0">—</div><div class="sc-val" id="scVal0">0</div></div>
+          <div class="sc-btns"><button class="sc-btn" data-act="score" data-arg="0:1" aria-label="Somar ponto"><svg class="ic"><use href="#i-plus"/></svg></button><button class="sc-btn" data-act="score" data-arg="0:-1" aria-label="Tirar ponto" id="scMinus0"><svg class="ic"><use href="#i-minus"/></svg></button></div></div>
+        <div class="sc sc-2" id="sc1"><div class="sc-info"><div class="sc-name" id="scName1">—</div><div class="sc-val" id="scVal1">0</div></div>
+          <div class="sc-btns"><button class="sc-btn" data-act="score" data-arg="1:1" aria-label="Somar ponto"><svg class="ic"><use href="#i-plus"/></svg></button><button class="sc-btn" data-act="score" data-arg="1:-1" aria-label="Tirar ponto" id="scMinus1"><svg class="ic"><use href="#i-minus"/></svg></button></div></div>
+      </div>
+    <div class="stage" id="stage">
+      <article class="card" id="card" data-level="leve" data-kind="card" data-size="m" aria-roledescription="carta">
+        <div class="card-orb"></div>
+        <div class="card-top">
+          <span class="badge" id="cardBadge"><svg class="ic"><use href="#i-moon"/></svg><span>Leve</span></span>
+          <span class="card-meta" id="cardMeta"></span>
+        </div>
+        <div class="card-mid">
+          <div id="cardTurn" class="turn hidden"><span class="dot"></span><span id="cardTurnTxt"></span></div>
+          <p class="card-q" id="cardText">Carregando…</p>
+        </div>
+        <p class="card-hint" id="cardHint"></p>
+      </article>
+    </div>
+
+    <div class="g-dock">
+      <div class="timer hidden" id="timer" role="timer" aria-label="Cronômetro da carta">
+        <div class="timer-bg"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+        <span class="timer-txt"><svg class="ic"><use href="#i-timer"/></svg><span id="timerTxt">30</span></span>
+      </div>
+      <div class="actions">
+        <button class="act" id="btnBack" data-act="back" aria-label="Carta anterior"><svg class="ic"><use href="#i-back"/></svg></button>
+        <button class="act fav" id="btnFav" data-act="fav" aria-label="Favoritar carta" aria-pressed="false"><svg class="ic"><use href="#i-heart"/></svg></button>
+        <button class="btn-next" id="btnNext" data-act="next">Próxima <svg class="ic"><use href="#i-next"/></svg></button>
+      </div>
+      <div class="progress" role="progressbar" aria-label="Progresso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><i id="progressFill"></i></div>
+      <div class="g-spacer"></div>
+    </div>
+  </section>
+
+  <!-- ======================= FAVORITAS ======================= -->
+  <section class="screen hidden" id="screen-favs" aria-label="Favoritas">
+    <div class="topbar"><div><h1 class="topbar-title"><svg class="ic fill"><use href="#i-heart"/></svg>Favoritas</h1><div class="topbar-sub" id="favsSub"></div></div></div>
+    <div class="filters" id="favFilters" role="radiogroup" aria-label="Filtrar favoritas"></div>
+    <div class="list-wrap" id="favsList"></div>
+  </section>
+
+  <!-- ======================= CONQUISTAS ======================= -->
+  <section class="screen hidden" id="screen-conquistas" aria-label="Conquistas">
+    <div class="topbar"><div><h1 class="topbar-title"><svg class="ic"><use href="#i-trophy"/></svg>Conquistas</h1><div class="topbar-sub">o que vocês já viveram juntos</div></div></div>
+    <div class="conq-ring" id="conqRing"></div>
+    <div class="sum-grid" id="conqStats"></div>
+    <div class="list-wrap" id="conqList"></div>
+  </section>
+
+  <!-- ======================= CONFIGURAÇÕES ======================= -->
+  <section class="screen hidden" id="screen-settings" aria-label="Configurações">
+    <div class="topbar"><div><h1 class="topbar-title"><svg class="ic"><use href="#i-sliders"/></svg>Configurações</h1><div class="topbar-sub">salvas automaticamente neste aparelho</div></div></div>
+    <div class="set-wrap">
+      <section class="panel"><h2 class="panel-title">Casal</h2>
+        <div class="set-names">
+          <div><label class="field-lbl" for="name1s">Você</label><input class="field" id="name1s" data-name="0" maxlength="14" placeholder="Seu nome" autocomplete="off"></div>
+          <div><label class="field-lbl" for="name2s">Seu amor</label><input class="field" id="name2s" data-name="1" maxlength="14" placeholder="Nome do amor" autocomplete="off"></div>
+        </div>
+        <p class="hint" style="padding:0 18px 16px">Mudar os nomes não altera o histórico: cada partida guarda os nomes da época.</p>
+      </section>
+      <section class="panel"><h2 class="panel-title">Aparência e som</h2><div data-controls="look"></div></section>
+      <section class="panel"><h2 class="panel-title">Partida</h2><div data-controls="game"></div></section>
+      <section class="panel"><h2 class="panel-title">Dados</h2>
+        <button class="row" data-act="go" data-arg="history"><span class="row-ico"><svg class="ic"><use href="#i-history"/></svg></span><span class="row-txt"><span class="row-lbl">Histórico de partidas</span><span class="row-sub" id="histSub">nenhuma partida concluída</span></span><svg class="ic row-chev"><use href="#i-chev"/></svg></button>
+        <button class="row danger" data-act="resetStats"><span class="row-ico"><svg class="ic"><use href="#i-trash"/></svg></span><span class="row-txt"><span class="row-lbl">Zerar estatísticas</span><span class="row-sub">conquistas, favoritas e histórico são mantidos</span></span></button>
+      </section>
+      <p class="about">Para Dois · versão 2<br>Tudo fica salvo só neste aparelho — nada é enviado para a internet.</p>
+    </div>
+  </section>
+
+  <!-- ======================= HISTÓRICO ======================= -->
+  <section class="screen hidden" id="screen-history" aria-label="Histórico de partidas">
+    <div class="topbar">
+      <div><h1 class="topbar-title"><svg class="ic"><use href="#i-history"/></svg>Histórico</h1><div class="topbar-sub" id="historySub"></div></div>
+      <button class="icon-btn" data-act="go" data-arg="settings" aria-label="Voltar às configurações"><svg class="ic" style="transform:scaleX(-1)"><use href="#i-chev"/></svg></button>
+    </div>
+    <div class="list-wrap" id="historyList"></div>
+  </section>
+
+  <!-- ======================= RESUMO ======================= -->
+  <section class="screen bare hidden" id="screen-summary" aria-label="Resumo da partida">
+    <div class="sum" id="summaryBox"></div>
+  </section>
+
+</main>
+
+<!-- NAVEGAÇÃO INFERIOR -->
+<nav class="nav" id="nav" aria-label="Navegação principal">
+  <button class="nav-tab on" id="nt-home" data-act="go" data-arg="home" aria-label="Início"><svg class="ic"><use href="#i-home"/></svg><span class="nav-lbl">Início</span></button>
+  <button class="nav-tab" id="nt-game" data-act="go" data-arg="game" aria-label="Jogar"><svg class="ic"><use href="#i-cards"/></svg><span class="nav-lbl">Jogar</span></button>
+  <button class="nav-tab" id="nt-favs" data-act="go" data-arg="favs" aria-label="Favoritas"><svg class="ic"><use href="#i-star"/></svg><span class="nav-lbl">Favoritas</span></button>
+  <button class="nav-tab" id="nt-conquistas" data-act="go" data-arg="conquistas" aria-label="Conquistas"><svg class="ic"><use href="#i-trophy"/></svg><span class="nav-lbl">Conquistas</span></button>
+  <button class="nav-tab" id="nt-settings" data-act="go" data-arg="settings" aria-label="Configurações"><svg class="ic"><use href="#i-sliders"/></svg><span class="nav-lbl">Config</span></button>
+</nav>
+
+<!-- ROLETA -->
+<div class="overlay hidden" id="ov-roleta" role="dialog" aria-modal="true" aria-labelledby="roletaTitle">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-eyebrow" id="roletaTitle">quem responde?</div>
+    <div class="wheel-box">
+      <svg class="wheel-ptr" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18L12 21z"/></svg>
+      <div class="wheel" id="wheel"><span class="wheel-l l0" id="wheelL0"></span><span class="wheel-l l1" id="wheelL1"></span></div>
+      <div class="wheel-hub"><svg class="ic fill"><use href="#i-heart"/></svg></div>
+    </div>
+    <div class="wheel-res" id="wheelRes" aria-live="polite"></div>
+    <div class="wheel-note" id="wheelNote">Toque em girar para sortear.</div>
+    <div class="sheet-actions row2">
+      <button class="btn" data-act="roletaClose">Fechar</button>
+      <button class="btn primary" id="btnSpin" data-act="spin"><svg class="ic"><use href="#i-dice"/></svg><span id="spinLbl">Girar</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- DIÁLOGO GENÉRICO -->
+<div class="overlay hidden" id="ov-dialog" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+  <div class="sheet" id="dlgSheet"></div>
+</div>
+
+<noscript><p style="padding:24px;text-align:center">O Para Dois precisa de JavaScript para funcionar.</p></noscript>
+<script>
+const PERGUNTAS={
+leve:[
+"Se você pudesse viver qualquer memória nossa novamente, qual seria?",
+"O que foi a primeira coisa que você notou em mim?",
+"Qual é o seu jeito favorito de receber carinho?",
+"Se a gente pudesse viajar pra qualquer lugar amanhã, onde seria?",
+"O que você mais admira em mim hoje?",
+"Qual música te lembra de mim quando você ouve sozinho(a)?",
+"O que te faz sentir mais amado(a) no nosso relacionamento?",
+"Se você pudesse mudar uma coisa no nosso dia a dia, o que seria?",
+"Qual foi o momento em que você mais sentiu orgulho de mim?",
+"O que você ainda quer viver comigo que ainda não vivemos?",
+"Como você descreve a gente pra quem não nos conhece?",
+"Qual foi o nosso melhor final de semana até hoje?",
+"O que você acha que eu preciso ouvir mais de você?",
+"Se a gente fosse um filme, qual seria o título?",
+"O que te fez ter certeza que queria ficar comigo?",
+"Qual cheiro te lembra de mim?",
+"O que você faria diferente no dia em que a gente se conheceu?",
+"Qual é a coisa mais boba que te faz sorrir quando pensa em mim?",
+"Se você fosse me dar um presente sem gastar dinheiro, o que seria?",
+"Qual é o momento do dia que você mais pensa em mim?",
+"Se você soubesse que eu não ia julgar, o que me contaria agora?",
+"Qual é a sua lembrança favorita de quando a gente se apaixonou?",
+"Qual foi a vez que você mais quis me abraçar sem conseguir?",
+"Tem alguma coisa que você nunca me perguntou mas queria saber?",
+"Se a gente pudesse voltar pra qualquer fase da nossa história, qual você escolheria?",
+"Qual é a coisa mais engraçada que já aconteceu com a gente?",
+"Se eu fosse um prato de comida, qual seria e por quê?",
+"O que você faria se tivesse um dia inteiro só pra mim, sem nenhum compromisso?",
+"Qual é o defeito meu que você acha engraçado em vez de irritante?",
+"Se a gente fosse uma dupla de super-herói, quais seriam nossos poderes?",
+"O que você mais sente saudade quando a gente fica um tempo sem se ver?",
+"Qual é o seu ritual favorito que a gente tem juntos, mesmo que seja bobagem?",
+"Se você pudesse me dar uma surpresa agora sem limites, o que faria?",
+"Qual foi a vez que eu te fiz rir sem querer?",
+"O que você imagina que a gente vai estar fazendo daqui a 10 anos?",
+"Qual é o lugar que mais te lembra de mim?",
+"Se você tivesse que me descrever em uma música, qual seria?",
+"Qual é a coisa que você acha que eu faço melhor que qualquer pessoa?",
+"O que você mais gosta de fazer comigo que parece idiota mas é ótimo?",
+"Se a gente fosse morar em outro país, qual você escolheria?",
+"O que você acha que vai ser diferente em nós daqui a 5 anos?",
+"Qual é o sonho que você tem que ainda não me contou direito?",
+"Se pudesse me dar um conselho pra minha vida, qual seria?",
+"Qual é a coisa que você quer que a gente crie juntos, pode ser um hábito, tradição ou projeto?",
+"O que te faz sentir que a gente é uma boa equipe?",
+"Qual é a coisa que você mais quer conquistar junto comigo?",
+"Se você pudesse mudar algo no nosso futuro, o que seria?",
+"Se a gente tivesse filhos, que tipo de pais você acha que seríamos?",
+"Qual é o lugar que você quer conhecer comigo antes de ficar velho(a)?",
+"O que você mais vê em mim que eu não vejo em mim mesmo(a)?",
+"Você já fingiu estar bem quando não estava, pra não me preocupar?",
+"Qual foi a discussão mais tola que a gente teve, mas que te machucou de verdade?",
+"O que você nunca me pede mas gostaria que eu fizesse?",
+"Existe uma versão minha que você preferia que voltasse?",
+"O que você mais tem dificuldade de me pedir?",
+"Qual é a coisa que você mais teme perder em mim?",
+"Qual é a coisa que você tem vergonha de admitir que sente por mim?",
+"Qual é a última vez que você me respondeu mal mas na verdade estava com raiva de outra coisa?",
+"Qual é o pensamento que você tem sobre a gente que prefere não compartilhar?",
+"Você já teve vontade de sumir por um tempo sem me avisar? Por quê?",
+"O que você diria de mim se estivesse falando sem saber que eu podia ouvir?",
+"Se você pudesse apagar uma memória da sua vida antes de mim, qual seria e por quê?",
+"Qual é a coisa que você admira em alguém próximo de mim mas nunca falou?",
+"Você já usou uma verdade pela metade pra esconder a outra metade?",
+"Existe alguma coisa que você fez, comprou ou foi que nunca me contou por nada?",
+"Se a gente tivesse 8 horas de viagem agora, o que você escolheria fazer comigo?",
+"Qual é a música que você queria que tocasse numa viagem nossa agora?",
+"Se você pudesse me levar pra qualquer lugar do mundo sem avisar, pra onde iria?",
+"O que você mais gosta de fazer durante uma viagem longa com alguém?",
+"Se a gente ficasse preso num lugar por um fim de semana inteiro, você acha que a gente ia se entender bem?"
+],
+medio:[
+"Tem alguma mensagem no seu WhatsApp que você preferiria que eu não visse?",
+"Existe algo que você nunca me contou por medo da minha reação?",
+"Qual foi a vez que você ficou com mais ciúme de mim? E por quê?",
+"Teve alguma vez que você pensou em terminar? O que te fez ficar?",
+"Existe alguém na sua vida que você acha que eu não gosto, mas você mantém contato?",
+"O que você faria se descobrisse uma mentira minha?",
+"Você já comparou a gente com outro casal e sentiu que perdemos?",
+"Tem algum segredo seu que você acha que eu nunca vou descobrir?",
+"Existe algo em mim que você já tentou mudar sem me falar diretamente?",
+"Você confia totalmente em mim? Se não 100%, o que falta?",
+"Já teve um momento em que você não quis chegar em casa? Por quê?",
+"Qual é a coisa que mais te incomoda em mim mas você nunca fala?",
+"Você já leu alguma conversa minha sem eu saber?",
+"O que você acha que eu penso de você que na verdade não é verdade?",
+"Qual foi a vez que eu te magoei e você nunca me contou?",
+"Existe algo que te incomoda no nosso relacionamento que você nunca tocou no assunto?",
+"Você já pesquisou o perfil de alguém que eu seguo com ciúme?",
+"Tem alguma pessoa que você tirou do seu círculo por causa de mim, mas com ressentimento?",
+"Qual foi a vez que você mais sentiu ciúme mas escondeu completamente?",
+"Você já checou minha localização ou tentou de alguma forma?",
+"Tem alguma coisa que eu faço que te deixa com ciúme mas você nunca falou?",
+"Você já mentiu sobre onde estava por medo da minha reação?",
+"Qual é o tipo de pessoa que, se eu ficasse perto, te deixaria inseguro(a)?",
+"Já teve uma situação em que você queria me contar algo mas decidiu enterrar?",
+"O que você esconderia de mim se soubesse que eu nunca ia descobrir?",
+"Você já apagou alguma coisa do celular antes de me mostrar?",
+"Você já fantasiou sobre como seria a sua vida sem mim?",
+"Existe algo que você faz quando está sozinho(a) que claramente não me contaria?",
+"Qual foi a última vez que você mentiu pra mim, mesmo que pequeno?",
+"Se eu fosse ler seu diário ou suas notas do celular, o que me surpreenderia?",
+"Você já desconfiou de algo meu mas preferiu não perguntar pra não ouvir a resposta?",
+"O que te dá mais medo que eu descubra sobre você?",
+"Você já comparou meu corpo com o de outra pessoa?",
+"Qual é o pensamento sobre mim que você teria vergonha de dizer em voz alta?",
+"Existe algo que eu já fiz que você fingiu perdoar mas ainda carrega?",
+"O que você faria se descobrisse que eu te escondi algo importante por muito tempo?",
+"Já pensou em ler meu celular enquanto eu dormia?",
+"Qual é a coisa que mais te deixa inseguro(a) em relação a mim?",
+"Você já inventou uma desculpa pra não transar comigo? Qual foi?",
+"O que você nunca me diria na cara dura mas pensa às vezes?",
+"Se eu te mostrasse todas as minhas conversas agora, você toparia me mostrar as suas também?",
+"Existe alguém que você acha que eu não devia seguir nas redes, mas nunca falou?",
+"Você já ficou com vontade de fuçar meu celular? Chegou a fazer isso?",
+"Tem alguma conversa sua que, se eu visse, geraria uma briga? Sobre o quê?",
+"Qual é a coisa que você mais esconde de mim por achar que eu não entenderia?",
+"Você já deu uma de que estava ocupado(a) quando na verdade só não queria falar comigo?",
+"Já teve um momento em que você torceu pra eu não perceber algo? O quê?",
+"Qual é a maior coisa que você já omitiu de mim até hoje?",
+"Você prefere que eu nunca descubra ou prefere me contar agora?",
+"Se você pudesse apagar uma coisa que eu já vi ou descobri sobre você, o que seria?",
+"Tem alguém que você conversa que eu nunca soube que existia?",
+"Qual foi a vez que você ficou com mais medo de me perder por culpa sua?",
+"Você já sentiu atração por alguém próximo de mim e guardou só pra você?",
+"O que você faz quando está sozinho(a) que mudaria se soubesse que eu poderia ver?",
+"Qual é a mentira que você mais repete pra mim sem perceber que é mentira?",
+"Se a gente tivesse uma câmera escondida na sua rotina, o que eu ia descobrir?",
+"Já ficou com algum(a) amigo(a) seu(sua)? Ou pelo menos teve vontade?",
+"Tem algum(a) amigo(a) meu(minha) que você acha atraente mas nunca comentou?",
+"Já teve vontade de ficar com alguém do seu círculo de amizades enquanto estava comigo?",
+"Se eu pedisse pra você me mostrar o celular agora sem preparar nada, você mostraria?",
+"Tem alguma conversa que você já apagou antes de eu poder ver?",
+"Se eu pudesse ouvir seus pensamentos por 5 minutos agora, o que eu ia descobrir?",
+"Qual é a coisa que você claramente sabe mas faz de conta que não sabe sobre mim?",
+"Qual é a última vez que você sentiu culpa em relação a mim e não me contou?",
+"Você já guardou algo que eu te mandei ou falei pra mostrar pra outra pessoa?",
+"Qual é a coisa que você mais teme que eu descubra algum dia?",
+"Já teve uma situação que você me contou uma versão diferente do que realmente aconteceu?",
+"Se eu te pedisse pra abrir seus stories arquivados agora, teria algo que me incomodaria?",
+"Qual é o assunto que você desvia toda vez que eu começo a tocar?",
+"Você já fez algo e pensou 'ainda bem que ele(a) não vai saber disso'?"
+],
+picante:[
+"Qual é a sua fantasia mais suja que você nunca teve coragem de me pedir?",
+"Me descreve em detalhes o que você quer que eu faça em você agora.",
+"Qual parte do meu corpo te deixa mais louco(a) e o que você quer fazer nela?",
+"O que eu poderia fazer com a minha boca que te deixaria completamente sem controle?",
+"Me conta a posição que mais te faz gozar e por que nunca pediu assim diretamente.",
+"Qual é a coisa mais obscena que você já imaginou fazer comigo?",
+"O que você quer que eu faça em você por pelo menos uma hora sem parar?",
+"Se você pudesse me usar do jeito que quisesse essa noite, como seria?",
+"Me descreve do começo ao fim como você quer que essa noite aconteça.",
+"Qual é a fantasia que envolve um lugar proibido onde você quer me ter?",
+"O que você quer sentir com a minha mão agora?",
+"Me conta o que passa na sua cabeça quando está sozinho(a) e pensa em mim de um jeito proibido.",
+"O que eu poderia sussurrar no seu ouvido que te deixaria molhado(a) ou duro(a) na hora?",
+"Qual é a coisa mais safada que você já fez na vida e que eu ainda não sei?",
+"Me descreve em detalhes onde você quer sentir minha boca.",
+"Qual é o toque meu que mais te excita e onde você quer que eu coloque a mão agora?",
+"O que você quer que eu faça enquanto te olho nos olhos?",
+"Me conta a fantasia mais intensa que você tem e que acha que eu diria não.",
+"Se você pudesse me dar ordens por uma noite inteira, quais seriam as três primeiras?",
+"Qual é o roteiro completo do que você quer fazer em mim hoje à noite?",
+"O que você faria em mim se eu ficasse completamente no seu controle por 30 minutos?",
+"Qual é a posição em que você mais quer me ter e onde você quer que seja?",
+"Me descreve o que você sente quando estamos juntos — o que passa pelo seu corpo.",
+"Qual é a coisa que você mais quer experimentar na cama que nunca experimentou com ninguém?",
+"O que você quer que eu faça com a minha língua?",
+"Me conta o que te faz gemer mais — o que eu falo, o que eu faço ou o jeito que eu te olho?",
+"Qual é a fantasia que envolve me prender ou ser preso(a)?",
+"O que você nunca me pediu mas toda vez que a gente fica junto você fica pensando nisso?",
+"Qual é a parte do meu corpo que você mais quer morder e como você quer fazer isso?",
+"Se eu chegasse agora sem roupa, o que você faria primeiro?",
+"Me conta a cena mais detalhada que você já imaginou entre a gente.",
+"Qual é o barulho ou a palavra que eu poderia falar que te deixaria louco(a) na hora?",
+"O que você quer que eu faça em você que nunca ninguém fez?",
+"Me descreve o que você quer sentir nos próximos 10 minutos — em detalhes.",
+"Qual é a fantasia que envolve a gente em um lugar onde podia ser pego(a)?",
+"O que você faria em mim se eu deixasse você fazer tudo que sempre quis sem nenhuma limitação?",
+"Qual é a coisa mais intensa que você já sentiu comigo na cama e quer repetir agora?",
+"Me conta o que você imagina quando está tocando em mim.",
+"Qual é o jeito que você mais quer ser tocado(a) que nunca me mostrou direito?",
+"O que você quer que eu faça enquanto você não pode se mexer?",
+"Me descreve a posição em que você mais gosta de me ver.",
+"Qual é a fantasia que te deixa mais excitado(a) e que você pensa quando está sozinho(a)?",
+"O que você quer fazer em mim que te dá vergonha de pedir na hora?",
+"Qual é o tipo de toque que faz você perder o controle mais rápido?",
+"Me conta o que você quer sentir depois que eu apagar a luz.",
+"Qual é o desejo que você guarda há mais tempo e nunca me falou?",
+"O que você quer que eu faça com a minha voz enquanto estou em você?",
+"Me descreve o que você quer que eu use ou vista que te deixaria louco(a).",
+"Qual é a coisa mais proibida que você quer que a gente faça juntos?",
+"Se você pudesse escolher como essa noite termina, nos mínimos detalhes, como seria?",
+"Você ficaria com outra pessoa só pra testar se o beijo dela é melhor que o meu?",
+"Se alguém muito atraente te beijasse por acidente, você terminaria o beijo ou pararia na hora?",
+"Você toparia assistir um filme com uma cena de sexo ao lado de uma pessoa que te atrai, se eu não soubesse?",
+"Se eu te desse permissão de fazer qualquer coisa com outra pessoa uma única vez, o que você escolheria?",
+"Você usaria uma desculpa pra ficar a sós com alguém que te atrai se soubesse que eu nunca ia saber?",
+"Se alguém que você acha muito gostoso(a) te mandasse uma foto comprometedora, você apagaria na hora?",
+"Você conseguiria ficar dançando colado(a) com alguém atraente a noite toda sem sentir nada?",
+"Se eu fosse embora numa viagem por 30 dias, você toparia um acordo de liberdade temporária?",
+"Você já imaginou como seria transar com alguém específico que eu conheço?",
+"Se tivesse certeza absoluta que eu nunca ia descobrir, você ficaria com alguém essa semana?",
+"Você toparia trocar fotos ousadas com alguém só pra ver até onde ia, se eu não soubesse?",
+"Se uma pessoa te pedisse um beijo 'só pra experimentar', você daria uma chance?",
+"Você conseguiria dividir uma cama com alguém que te atrai sem nada acontecer?",
+"Se eu te pedisse pra seduzir alguém pra me provar que consegue mas sem deixar rolar, você toparia?",
+"Você já pensou 'se eu fosse solteiro(a) eu ficaria com essa pessoa' sobre alguém que a gente conhece juntos?",
+"Se alguém te mandasse uma mensagem dizendo que quer você, você responderia só pra ver o que ia acontecer?",
+"Você toparia um beijo com alguém famoso que te atrai muito se eu te desse uma 'ficha grátis'?",
+"Se a pessoa que você mais achou gostosa na vida aparecesse agora na sua frente querendo você, o que faria?",
+"Você já ficou excitado(a) pensando em alguém que não sou eu e não contou?",
+"Se eu te pedisse pra me mostrar exatamente o que você quer que eu faça em você, você conseguiria mostrar sem falar?"
+]};
+const VDD={
+leve:[
+{t:'V',q:'Qual foi a primeira coisa que você mentiu pra mim? Mesmo que bobagem.'},
+{t:'D',q:'Dê um abraço de pelo menos 30 segundos sem falar nada.'},
+{t:'V',q:'Você já me olhou dormindo? O que você pensou?'},
+{t:'D',q:'Mande uma mensagem apaixonada pra pessoa ao seu lado agora, pelo celular.'},
+{t:'V',q:'Qual é a coisa mais estranha que você já fez por mim sem eu saber?'},
+{t:'D',q:'Dê 3 beijos no pescoço da outra pessoa agora.'},
+{t:'V',q:'O que você pensou na primeira vez que me viu sem roupa?'},
+{t:'D',q:'Olhe nos olhos da outra pessoa por 1 minuto sem rir.'},
+{t:'V',q:'Você já praticou como me pedir pra ficar, ou pedir casamento?'},
+{t:'D',q:'Faça uma massagem de 2 minutos onde a outra pessoa pedir.'},
+{t:'V',q:'Qual parte minha você acha que não sei que você adora?'},
+{t:'D',q:'Sussurre algo que você nunca disse em voz alta no ouvido da outra pessoa.'},
+{t:'V',q:'Você já me stalkeou antes de a gente sair? O que você achou?'},
+{t:'D',q:'Dance devagar com a outra pessoa por 1 música inteira.'},
+{t:'V',q:'O que você faria se eu te pedisse pra sair agora, meia-noite?'},
+{t:'D',q:'Escreva uma frase de amor na mão da outra pessoa com o dedo.'},
+{t:'V',q:'Qual foi o momento em que você teve mais vontade de me ligar do nada?'},
+{t:'D',q:'Conte algo que aconteceu hoje que ainda não contou.'},
+{t:'V',q:'Você tem alguma foto minha guardada que eu não sei que você tem?'},
+{t:'D',q:'Imite a outra pessoa fazendo algo que ela faz muito — ela tem que adivinhar o quê.'},
+{t:'V',q:'O que você faria diferente no dia que a gente se conheceu?'},
+{t:'D',q:'Faça uma declaração de amor de 30 segundos improv, sem parar.'},
+{t:'V',q:'Qual é a qualidade minha que você mais inveja nos seus amigos?'},
+{t:'D',q:'Envie um elogio sincero pra outra pessoa por mensagem de texto agora.'},
+{t:'V',q:'Qual foi o momento em que você mais teve medo de me perder?'},
+{t:'D',q:'Descreva a outra pessoa usando apenas 5 adjetivos — e explique cada um.'},
+{t:'V',q:'O que você acha que eu ainda não descobri sobre você?'},
+{t:'D',q:'Cante pelo menos 10 segundos de uma música que te lembra da outra pessoa.'},
+{t:'V',q:'Qual é o hábito meu que você acha o mais fofo mesmo sendo idiota?'},
+{t:'D',q:'Escreva no braço da outra pessoa com o dedo uma palavra que representa ela pra você.'},
+{t:'V',q:'Se você pudesse mudar o jeito que a gente se conheceu, o que você faria diferente?'},
+{t:'D',q:'Deite a cabeça no colo da outra pessoa por 2 minutos. Nenhum dos dois pode falar nada.'},
+{t:'V',q:'Qual foi o momento em que você mais quis me ligar do nada mas segurou?'},
+{t:'D',q:'Escreva uma mensagem pro número da outra pessoa agora dizendo o que você sente, mas manda de verdade.'},
+{t:'V',q:'O que você faria se eu chegasse agora com uma mala pronta pra viajar sem avisar?'},
+{t:'D',q:'Cheira o pescoço da outra pessoa e diz o que o cheiro te lembra.'},
+{t:'V',q:'Qual é a coisa que eu faço sem perceber que te deixa com vontade de me beijar?'},
+{t:'D',q:'Faz uma massagem nos ombros da outra pessoa por 3 minutos sem parar.'},
+{t:'V',q:'Se hoje fosse nosso último dia juntos, o que você ia querer fazer?'},
+{t:'D',q:'Desenha no braço da outra pessoa com o dedo algo que representa ela. Ela tem que adivinhar.'}],
+medio:[
+{t:'V',q:'Você já leu alguma conversa minha sem eu saber?'},
+{t:'D',q:'Mostre a última foto que você tirou agora. Sem deletar antes.'},
+{t:'V',q:'Qual foi a maior briga que você me culpou mas sabia que era sua culpa?'},
+{t:'D',q:'Mande uma mensagem ousada pra outra pessoa agora — pelo celular, mesmo estando do lado.'},
+{t:'V',q:'Você já pesquisou meu ex ou minha ex nas redes sociais?'},
+{t:'D',q:'Deixe a outra pessoa desbloquear seu celular e ficar 30 segundos com ele.'},
+{t:'V',q:'Qual foi a vez que você teve mais ciúme de alguém que eu mencionei?'},
+{t:'D',q:'Fique 5 minutos sem olhar o celular — sem exceção.'},
+{t:'V',q:'Existe alguém que você não me apresentou de propósito?'},
+{t:'D',q:'Poste algo sobre a outra pessoa agora nos stories — pode ser foto ou texto.'},
+{t:'V',q:'Qual é a coisa que mais te incomoda em mim mas você nunca fala?'},
+{t:'D',q:'Conte um segredo que você tem guardado há mais de 1 mês.'},
+{t:'V',q:'Você já me testou pra ver como eu reagia a alguma coisa?'},
+{t:'D',q:'Mostre a última pesquisa que você fez no Google.'},
+{t:'V',q:'Você já fingiu ter planos pra não sair comigo?'},
+{t:'D',q:'Escreva num papel o que você acha que eu penso de você — e leia em voz alta.'},
+{t:'V',q:'O que você nunca me disse que preferiria que eu não fizesse?'},
+{t:'D',q:'Ligue pra um amigo em comum e diga que está com a outra pessoa agora.'},
+{t:'V',q:'Qual foi a vez que você me mentiu e ainda guarda culpa?'},
+{t:'D',q:'Troque o telefone com a outra pessoa por 3 minutos — sem avisar o que tem lá.'},
+{t:'V',q:'Já pensou em alguém enquanto estava comigo?'},
+{t:'D',q:'Mostre o último meme ou vídeo que você salvou no celular.'},
+{t:'V',q:'O que você diria de mim pra um terapeuta?'},
+{t:'D',q:'Conte uma situação em que você agiu errado com a outra pessoa e nunca pediu desculpa.'},
+{t:'V',q:'Qual foi a maior vez que você fingiu concordar comigo?'},
+{t:'V',q:'Já ficou com algum(a) amigo(a) seu(sua)? Ou teve vontade e nunca contou?'},
+{t:'D',q:'Fala o nome de uma pessoa do seu círculo de amizades que você já achou atraente — pode ser só um pouco.'},
+{t:'D',q:'Mostre a conversa mais recente do seu WhatsApp — pode ser só o nome, não precisa abrir.'},
+{t:'V',q:'Você já checou minha localização ou tentou rastrear onde eu estava?'},
+{t:'D',q:'Descreva em voz alta o que mais te deixa com ciúme no outro — sem filtro.'},
+{t:'V',q:'Qual é o tipo de pessoa que, se eu ficasse perto, te deixaria mais inseguro(a)?'},
+{t:'D',q:'Mostre a foto do seu ex ou ex mais recente que ainda tem no celular. Se não tiver, juro que acredito.'},
+{t:'V',q:'Você já mentiu sobre o motivo de estar chateado(a) comigo?'},
+{t:'D',q:'Mostra a última mensagem de voz que você recebeu. Pode ser só o nome de quem mandou.'},
+{t:'V',q:'Qual foi a vez que você mais se arrependeu de algo que falou pra mim?'},
+{t:'D',q:'Conta pra outra pessoa algo que você nunca falou sobre como vocês se conheceram — da sua perspectiva.'},
+{t:'V',q:'Você já quis terminar por um motivo que nunca me contou?'},
+{t:'D',q:'Mostra uma foto sua do período antes de me conhecer que você nunca me mostrou.'},
+{t:'V',q:'Qual é a coisa que você mais evita tocar no assunto comigo?'},
+{t:'D',q:'Manda uma mensagem agora pra alguém que você não fala há mais de 3 meses. A outra pessoa escolhe quem.'},
+{t:'V',q:'Você já desconfiou de mim sem ter motivo real? O que te deu essa sensação?'},
+{t:'D',q:'Lê em voz alta o último story ou post que você salvou — seja o que for.'}],
+picante:[
+{t:'V',q:'Qual é a fantasia que você mais quer realizar mas tem vergonha de pedir?'},
+{t:'D',q:'Dê um beijo de 30 segundos. Sem parar antes.'},
+{t:'V',q:'Você já pensou em mim em algum momento que não devia?'},
+{t:'D',q:'Tire uma peça de roupa da outra pessoa agora.'},
+{t:'V',q:'O que eu faço na cama que te deixa mais louco(a)?'},
+{t:'D',q:'Faça uma massagem com as mãos por 3 minutos onde a outra pessoa quiser.'},
+{t:'V',q:'Me conta como seria a noite perfeita com você no comando.'},
+{t:'D',q:'Sussurre no ouvido o que você quer fazer com a outra pessoa hoje à noite.'},
+{t:'V',q:'Qual lugar você mais quer experimentar além da cama?'},
+{t:'D',q:'Beije o pescoço da outra pessoa por 20 segundos sem parar.'},
+{t:'V',q:'Você já ficou com vontade enquanto a gente estava em um lugar público?'},
+{t:'D',q:'Escreva com o dedo nas costas da outra pessoa o que você quer fazer — ela tem que adivinhar.'},
+{t:'V',q:'O que você quer que eu faça que nunca te pedi diretamente?'},
+{t:'D',q:'Fique de olhos fechados por 2 minutos enquanto a outra pessoa faz o que quiser.'},
+{t:'V',q:'Qual cena de filme ou série te fez lembrar de algo que quer fazer comigo?'},
+{t:'D',q:'Mande uma mensagem de áudio ousada pra outra pessoa agora. Ela ouve na frente de você.'},
+{t:'V',q:'Me conta a posição que você mais gosta e por que nunca falou assim diretamente.'},
+{t:'D',q:'Fique sem falar por 3 minutos — comunique só com toque.'},
+{t:'V',q:'O que eu poderia fazer nos próximos 5 minutos que te deixaria completamente sem controle?'},
+{t:'D',q:'Troque um beijo lento, de olhos fechados, sem pressa.'},
+{t:'V',q:'Qual é a coisa mais safada que você já imaginou fazer comigo?'},
+{t:'D',q:'Descreva em voz alta o que você quer sentir essa noite — nos mínimos detalhes.'},
+{t:'V',q:'O que você gostaria de fazer em mim por pelo menos uma hora sem parar?'},
+{t:'D',q:'Olhe nos olhos da outra pessoa e diga o que você mais quer fazer nela agora.'},
+{t:'V',q:'Qual é o toque meu que te excita mais rápido?'},
+{t:'D',q:'Escolha um lugar no corpo da outra pessoa e beije por pelo menos 15 segundos.'},
+{t:'V',q:'Me conta uma fantasia que envolve algum acessório ou objeto.'},
+{t:'D',q:'Diga em voz alta a coisa mais ousada que você toparia fazer agora se eu pedisse.'},
+{t:'V',q:'O que eu poderia sussurrar no seu ouvido que te deixaria louco(a) na hora?'},
+{t:'D',q:'Tire mais uma peça de roupa — sua dessa vez.'},
+{t:'V',q:'Qual foi a vez que você mais ficou excitado(a) comigo num lugar inapropriado?'},
+{t:'D',q:'Descreve em detalhes o que você quer que aconteça daqui a 30 minutos.'},
+{t:'V',q:'Qual parte do meu corpo você mais fica com vontade de tocar quando estamos em público?'},
+{t:'D',q:'Manda um áudio de 30 segundos pro celular da outra pessoa falando tudo que você quer fazer nela.'},
+{t:'V',q:'Qual foi o momento mais quente entre a gente que você pensa às vezes quando está sozinho(a)?'},
+{t:'D',q:'Escolhe um lugar no corpo da outra pessoa e beija por pelo menos 20 segundos sem parar.'},
+{t:'V',q:'Você já ficou excitado(a) só pela minha voz? Em que situação?'},
+{t:'D',q:'Com os olhos fechados, toca na outra pessoa do jeito que mais te dá vontade por 2 minutos.'},
+{t:'V',q:'Me conta uma coisa que eu faço no íntimo que você queria que eu fizesse mais.'},
+{t:'D',q:'Sussurra no ouvido da outra pessoa exatamente o que você vai fazer nela essa noite.'}]};
+const CORINGAS=["🃏 CORINGA! Cada um faz uma pergunta que sempre quis fazer mas nunca teve coragem.","🃏 CORINGA! Os dois têm 60 segundos pra se elogiar — sem parar, sem repetir.","🃏 CORINGA! Troquem os celulares e cada um manda uma mensagem como se fosse o outro.","🃏 CORINGA! Façam um pacto: algo que vão fazer juntos essa semana.","🃏 CORINGA! Cada um conta um momento em que o outro fez seu dia melhor sem saber.","🃏 CORINGA! Olhem nos olhos em silêncio por 1 minuto inteiro. Sem rir, sem falar.","🃏 CORINGA! Descrevam um ao outro em 3 palavras — e expliquem cada uma."];
+const EU_NUNCA={
+leve:[
+"Eu nunca fiz um piquenique à noite com alguém.",
+"Eu nunca fiquei sem dormir a noite toda conversando.",
+"Eu nunca chorei assistindo a um filme de ação.",
+"Eu nunca cantei no chuveiro uma música de novela.",
+"Eu nunca comi pizza no café da manhã.",
+"Eu nunca fiz algo completamente idiota por alguém que gostava.",
+"Eu nunca acordei antes das 6h por vontade própria.",
+"Eu nunca ri tanto que saiu líquido pelo nariz.",
+"Eu nunca fui a um karaokê e levei a sério.",
+"Eu nunca fingi que entendi uma piada que não entendi.",
+"Eu nunca mandei mensagem pra pessoa errada num momento ruim.",
+"Eu nunca comprei algo caro só pra impressionar alguém.",
+"Eu nunca fiz planos e cancelei no último minuto sem motivo real.",
+"Eu nunca disse que estava chegando quando estava ainda em casa.",
+"Eu nunca comi algo caído no chão e não contei pra ninguém.",
+"Eu nunca fiquei com ciúme de um personagem de filme.",
+"Eu nunca dei uma desculpa ridícula pra não sair de casa.",
+"Eu nunca relei uma conversa minha com outra pessoa pra me sentir bem.",
+"Eu nunca chorei ouvindo uma música no ônibus/carro tentando disfarçar.",
+"Eu nunca sonhei com alguém e fiquei constrangido(a) no dia seguinte.",
+"Eu nunca fui a um lugar sozinho(a) que eu disse que ia acompanhado(a).",
+"Eu nunca fingi estar dormindo pra não ter que responder mensagem.",
+"Eu nunca dei risada de algo que me disseram pra não parecer chato(a) mas achei péssimo.",
+"Eu nunca ignorei uma chamada da pessoa que estava do meu lado.",
+"Eu nunca comprei algo escondido e escondi quando chegou.",
+"Eu nunca fui ao banheiro só pra ter um tempinho sozinho(a) longe de alguém.",
+"Eu nunca menti sobre gostar de uma comida que detesto.",
+"Eu nunca fingi entender uma piada que não entendi.",
+"Eu nunca mandei um áudio e depois fiquei arrependido(a) do que falei.",
+"Eu nunca googlei o nome de alguém só por curiosidade sobre a vida deles."
+],
+medio:[
+"Eu nunca li a conversa de alguém sem permissão.",
+"Eu nunca fui atrás de alguém nas redes sociais por ciúme.",
+"Eu nunca fingi que estava dormindo pra não ter que falar.",
+"Eu nunca guardei rancor de algo e fingi que tinha passado.",
+"Eu nunca menti sobre onde estava pra evitar confusão.",
+"Eu nunca testei alguém que eu amava pra ver como reagia.",
+"Eu nunca falei mal de alguém que era próximo de mim.",
+"Eu nunca senti ciúme de um amigo(a) de alguém que namorava.",
+"Eu nunca apaguei mensagem antes de mostrar o celular pra alguém.",
+"Eu nunca fui bisbilhotar o perfil de um ex ou ex de alguém que eu gostava.",
+"Eu nunca menti sobre algo sério e nunca fui descoberto(a).",
+"Eu nunca fingi gostar de alguém que não suportava por conveniência.",
+"Eu nunca omiti algo importante pra não gerar briga.",
+"Eu nunca fiz algo que me envergonhou e nunca contei pra ninguém.",
+"Eu nunca dei uma de que estava bem quando estava destruído(a) por dentro.",
+"Eu nunca tive ciúme de alguém do mesmo sexo que o meu parceiro(a).",
+"Eu nunca fui curioso(a) e pesquisei algo sobre a vida de alguém que me incomodava.",
+"Eu nunca fiz algo por impulso que depois me arrependei profundamente.",
+"Eu nunca senti atração por alguém que não devia e guardei isso comigo.",
+"Eu nunca fiz uma escolha errada e culpei outra pessoa por isso.",
+"Eu nunca fiquei com um(a) amigo(a) de alguém que namorava enquanto estava em um relacionamento.",
+"Eu nunca tive vontade de ficar com um(a) amigo(a) meu(minha) mas segurei por causa do relacionamento.",
+"Eu nunca bloqueei alguém e depois desbloqueei sem falar nada.",
+"Eu nunca chequei o celular de alguém enquanto ele(a) dormia.",
+"Eu nunca fingi concordar com algo que achei completamente errado.",
+"Eu nunca inventei uma história pra não ter que contar o que realmente aconteceu.",
+"Eu nunca dei um like errado bisbilhotando o perfil de alguém.",
+"Eu nunca menti sobre onde estava pra evitar conflito.",
+"Eu nunca guardei uma conversa, foto ou mensagem de alguém sem a pessoa saber.",
+"Eu nunca fiz algo por impulso que me envergonhei depois e nunca contei.",
+"Eu nunca terminei ou diminuí uma amizade por causa de um relacionamento e me arrependi.",
+"Eu nunca fiquei imaginando como seria a vida se tivesse tomado uma decisão diferente num relacionamento."
+],
+picante:[
+"Eu nunca fiz sexo em um lugar onde podia ser pego(a).",
+"Eu nunca mandei uma foto comprometedora pra alguém.",
+"Eu nunca fingi que estava dormindo quando queria transar.",
+"Eu nunca tive um sonho erótico com alguém que não esperava.",
+"Eu nunca fiz sexo sem querer muito mas sem recusar também.",
+"Eu nunca usei algum objeto de um jeito que não era pra usar.",
+"Eu nunca fiz algo na cama que não voltaria a fazer jamais.",
+"Eu nunca fingi mais do que senti pra agradar alguém.",
+"Eu nunca tive vontade de alguém na hora mais inapropriada possível.",
+"Eu nunca fiz coisa que a minha família jamais pode saber.",
+"Eu nunca fiz sexo enquanto alguém estava em outro cômodo da casa.",
+"Eu nunca tive uma fantasia que tenho vergonha de admitir em voz alta.",
+"Eu nunca fiz algo explícito num lugar que claramente não era pra isso.",
+"Eu nunca dei ou recebi uma mordida num lugar inusitado.",
+"Eu nunca tive vontade de uma pessoa só pela voz dela.",
+"Eu nunca parei de fazer o que estava fazendo pra transar no meio do dia.",
+"Eu nunca fiz algo que considero proibido e que me deixou com vontade de repetir.",
+"Eu nunca fiquei completamente sem roupa em um lugar fora de casa.",
+"Eu nunca fiz sexo por mais de duas horas sem parar.",
+"Eu nunca fantasiei em detalhes com alguém enquanto estava com outra pessoa.",
+"Eu nunca mandei uma mensagem ousada pra pessoa errada.",
+"Eu nunca fiz sexo num lugar que claramente não era pra isso e me arriscaram muito.",
+"Eu nunca fingi mais do que senti pra não decepcionar alguém.",
+"Eu nunca tive vontade de alguém que estava numa relação comprometida.",
+"Eu nunca pesquisei algo explícito no celular que eu apagaria imediatamente se alguém pedisse pra ver.",
+"Eu nunca enviei ou recebi uma foto comprometedora e nunca contei pra ninguém.",
+"Eu nunca fiquei com duas pessoas no mesmo dia.",
+"Eu nunca fiz algo que eu jurei que nunca faria e acabei gostando.",
+"Eu nunca pensei numa pessoa específica enquanto estava com outra.",
+"Eu nunca fiz algo íntimo num ambiente onde poderia ser descoberto(a) a qualquer momento."
+]};
+
+/* =====================================================================
+   MOTOR DO APP
+   ===================================================================== */
+'use strict';
+
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+const ic=(n,cls='')=>`<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function fmtDur(ms){const s=Math.round(ms/1000);if(s<60)return s+' s';const m=Math.floor(s/60);if(m<60)return m+' min'+(s%60&&m<10?' '+String(s%60).padStart(2,'0')+' s':'');const h=Math.floor(m/60);return h+' h '+String(m%60).padStart(2,'0')+' min';}
+function fmtDate(ts){try{return new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace('.','');}catch(e){return '';}}
+
+/* ---------- Armazenamento seguro (nunca derruba o app) ---------- */
+const K={favsLegacy:'pd_favs',favs:'pd_favs_v2',stats:'pd_stats',unlocked:'pd_unlocked',theme:'pd_theme',settings:'pd_settings',players:'pd_players',custom:'pd_custom',history:'pd_history',anniv:'pd_anniv_seen'};
+const LS={mem:{},
+  get(k){try{return localStorage.getItem(k);}catch(e){return k in this.mem?this.mem[k]:null;}},
+  set(k,v){try{localStorage.setItem(k,v);}catch(e){this.mem[k]=v;}}};
+function readJSON(k,fb){const r=LS.get(k);if(r==null)return fb;try{const v=JSON.parse(r);return v==null?fb:v;}catch(e){console.warn('Dados corrompidos ignorados:',k);return fb;}}
+function writeJSON(k,v){try{LS.set(k,JSON.stringify(v));}catch(e){}}
+const num=(v,d=0)=>{const n=Number(v);return Number.isFinite(n)&&n>=0?Math.floor(n):d;};
+
+/* ---------- Constantes de domínio ---------- */
+const START_DATE={y:2023,m:4,d:7};            // início do relacionamento (07/04/2023)
+const MODE_KEYS=['perg','vdd','en'];
+const LEVELS=['leve','medio','picante'];
+const LEVEL_LABEL={leve:'Leve',medio:'Médio',picante:'Picante',mix:'Misto'};
+const LEVEL_ICON={leve:'moon',medio:'flame',picante:'lips'};
+const MODE_META={
+  perg:{name:'Perguntas',short:'Perguntas',icon:'chat'},
+  vdd:{name:'Verdade ou Desafio',short:'V ou D',icon:'cards'},
+  en:{name:'Eu nunca',short:'Eu nunca',icon:'eyeoff'}};
+const CQ_DEST={perg:'Perguntas',verdade:'Verdade',desafio:'Desafio',en:'Eu nunca'};
+const CQ_LEVEL={all:'Todos os níveis',leve:'Leve',medio:'Médio',picante:'Picante'};
+const SKIPS_PER_SESSION=3;      // regra original: 3 pulos por partida
+const CORINGA_EVERY=7;          // regra original: coringa a cada 7 cartas
+const MAX_HISTORY=100;
+
+/* ---------- Conquistas ---------- */
+const CONQUISTAS_DEF=[
+  {id:'first',ico:'sparkle',name:'Primeira sessão',desc:'Jogaram pela primeira vez',goal:1,stat:'sessoes'},
+  {id:'10p',ico:'chat',name:'10 perguntas',desc:'Passaram por 10 cartas juntos',goal:10,stat:'perguntas'},
+  {id:'50p',ico:'flame',name:'50 perguntas',desc:'Passaram por 50 cartas juntos',goal:50,stat:'perguntas'},
+  {id:'100p',ico:'bolt',name:'100 perguntas',desc:'Passaram por 100 cartas juntos',goal:100,stat:'perguntas'},
+  {id:'5fav',ico:'star',name:'Colecionadores',desc:'Salvaram 5 favoritas',goal:5,stat:'favs'},
+  {id:'5sess',ico:'trophy',name:'Casal dedicado',desc:'5 sessões jogadas',goal:5,stat:'sessoes'},
+  {id:'coringa',ico:'crown',name:'Sorte do coringa',desc:'Caiu uma carta coringa',goal:1,stat:'coringas'},
+  {id:'concl',ico:'flag',name:'Noite completa',desc:'Terminaram uma partida e viram o resumo',goal:1,stat:'concluidas'},
+  {id:'modos',ico:'layers',name:'Exploradores',desc:'Jogaram os 3 modos',goal:3,stat:'modosN'},
+  {id:'maratona',ico:'clock',name:'Maratona a dois',desc:'30 cartas numa só partida',goal:30,stat:'maxCartas'}
+];
+
+/* ---------- Dados do jogo (carregados e normalizados) ---------- */
+const S={settings:null,players:{n1:'',n2:''},stats:null,unlocked:[],favs:[],custom:[],history:[]};
+const SETTING_DEFS={
+  mode:{def:'perg',oneOf:MODE_KEYS},
+  startLevel:{def:'leve',oneOf:LEVELS},
+  limit:{def:0,oneOf:[0,10,20,30]},
+  timer:{def:false,bool:true},
+  timerSecs:{def:30,oneOf:[15,30,60]},
+  random:{def:false,bool:true},
+  coringa:{def:true,bool:true},
+  score:{def:true,bool:true},
+  sound:{def:true,bool:true},
+  night:{def:false,bool:true},
+  theme:{def:'t-dark',oneOf:['t-dark','t-oled','t-light','t-wine']},
+  calm:{def:null,bool:true,nullable:true}
+};
+function loadSettings(){
+  const raw=readJSON(K.settings,{});const o=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  const out={};
+  for(const [k,d] of Object.entries(SETTING_DEFS)){
+    let v=o[k];
+    if(k==='theme'&&v===undefined)v=LS.get(K.theme)||undefined;      // migra a chave antiga pd_theme
+    if(d.bool){out[k]=typeof v==='boolean'?v:(d.nullable&&v===null?null:d.def);}
+    else out[k]=d.oneOf.includes(v)?v:d.def;
+  }
+  return out;
+}
+function saveSettings(){writeJSON(K.settings,S.settings);LS.set(K.theme,S.settings.theme);}
+
+function loadStats(){
+  const s=readJSON(K.stats,{});const o=s&&typeof s==='object'&&!Array.isArray(s)?s:{};
+  return{perguntas:num(o.perguntas),sessoes:num(o.sessoes),coringas:num(o.coringas),puladas:num(o.puladas),
+    concluidas:num(o.concluidas),tempo:num(o.tempo),maxCartas:num(o.maxCartas),
+    modos:Array.isArray(o.modos)?o.modos.filter(m=>MODE_KEYS.includes(m)):[]};
+}
+function saveStats(){writeJSON(K.stats,S.stats);}
+
+function loadUnlocked(){const u=readJSON(K.unlocked,[]);return Array.isArray(u)?[...new Set(u.filter(x=>typeof x==='string'))]:[];}
+
+/* favoritas: formato novo {text,mode,level,type,at}; migra a lista antiga (array de textos) sem perder nada */
+let LOOKUP=null;
+function buildLookup(){
+  LOOKUP=new Map();
+  const add=(t,mode,level,type)=>{const k=norm(t);if(k&&!LOOKUP.has(k))LOOKUP.set(k,{mode,level,type});};
+  LEVELS.forEach(l=>{
+    PERGUNTAS[l].forEach(t=>add(t,'perg',l));
+    VDD[l].forEach(c=>add(c.q,'vdd',l,c.t));
+    EU_NUNCA[l].forEach(t=>add(t,'en',l));
+  });
+  CORINGAS.forEach(t=>add(cleanCoringa(t),'perg','coringa'));
+}
+const cleanCoringa=t=>String(t).replace(/^🃏\s*CORINGA!\s*/i,'');
+function loadFavs(){
+  let list=readJSON(K.favs,null);
+  if(!Array.isArray(list)){
+    const legacy=readJSON(K.favsLegacy,[]);
+    list=Array.isArray(legacy)?legacy:[];
+  }
+  if(!LOOKUP)buildLookup();
+  const seen=new Set(),out=[];
+  for(const f of list){
+    const o=typeof f==='string'?{text:f}:(f&&typeof f==='object'?f:null);
+    if(!o||typeof o.text!=='string')continue;
+    const text=o.text.trim();const key=norm(text);
+    if(!text||seen.has(key))continue;seen.add(key);
+    const hit=LOOKUP.get(key)||{};
+    out.push({text,mode:MODE_KEYS.includes(o.mode)?o.mode:(hit.mode||'perg'),
+      level:['leve','medio','picante','coringa'].includes(o.level)?o.level:(hit.level||null),
+      type:o.type==='V'||o.type==='D'?o.type:(hit.type||null),at:num(o.at)});
+  }
+  return out;
+}
+function saveFavs(){writeJSON(K.favs,S.favs);}
+
+function loadCustom(){
+  const l=readJSON(K.custom,[]);if(!Array.isArray(l))return[];
+  const seen=new Set();
+  return l.filter(c=>c&&typeof c.text==='string'&&c.text.trim()).map(c=>({
+    id:typeof c.id==='string'?c.id:uid(),text:c.text.trim().slice(0,220),
+    dest:CQ_DEST[c.dest]?c.dest:'perg',level:CQ_LEVEL[c.level]?c.level:'all',at:num(c.at)
+  })).filter(c=>{const k=c.dest+'|'+norm(c.text);if(seen.has(k))return false;seen.add(k);return true;});
+}
+function saveCustom(){writeJSON(K.custom,S.custom);}
+
+function loadHistory(){
+  const l=readJSON(K.history,[]);if(!Array.isArray(l))return[];
+  return l.filter(r=>r&&typeof r==='object'&&MODE_KEYS.includes(r.mode)).map(r=>({
+    id:typeof r.id==='string'?r.id:uid(),ts:num(r.ts),mode:r.mode,
+    levels:Array.isArray(r.levels)?r.levels.filter(x=>LEVELS.includes(x)):[],
+    names:Array.isArray(r.names)&&r.names.length===2?r.names.map(n=>String(n).slice(0,14)):['Você','Amor'],
+    dur:num(r.dur),cards:num(r.cards),skips:num(r.skips),coringas:num(r.coringas),favs:num(r.favs),
+    scores:Array.isArray(r.scores)&&r.scores.length===2?r.scores.map(n=>num(n)):null,
+    conq:Array.isArray(r.conq)?r.conq.filter(x=>typeof x==='string'):[]
+  })).slice(0,MAX_HISTORY);
+}
+function saveHistory(){writeJSON(K.history,S.history);}
+
+function loadPlayers(){const p=readJSON(K.players,{});const o=p&&typeof p==='object'?p:{};
+  return{n1:typeof o.n1==='string'?o.n1.slice(0,14):'',n2:typeof o.n2==='string'?o.n2.slice(0,14):''};}
+const names=()=>[(S.players.n1||'').trim()||'Você',(S.players.n2||'').trim()||'Amor'];
+
+function loadAll(){
+  buildLookup();
+  S.settings=loadSettings();S.stats=loadStats();S.unlocked=loadUnlocked();
+  S.favs=loadFavs();S.custom=loadCustom();S.history=loadHistory();S.players=loadPlayers();
+}
+
+/* ---------- Som (respeita a preferência) ---------- */
+const AC=window.AudioContext||window.webkitAudioContext;let _ac=null;
+function getAC(){if(!_ac&&AC){try{_ac=new AC();}catch(e){}}if(_ac&&_ac.state==='suspended')_ac.resume().catch(()=>{});return _ac;}
+function playTone(f,d,type='sine',v=.12){
+  if(!S.settings||!S.settings.sound)return;
+  try{const a=getAC();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);
+    o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);o.start();o.stop(a.currentTime+d);}catch(e){}
+}
+const seq=(fs,d,type,v,gap)=>fs.forEach((f,i)=>setTimeout(()=>playTone(f,d,type,v),i*gap));
+const sfx={
+  reveal:()=>{playTone(520,.1,'sine',.1);setTimeout(()=>playTone(660,.12,'sine',.08),90);},
+  next:()=>{playTone(350,.06,'triangle',.08);setTimeout(()=>playTone(440,.1,'triangle',.09),55);},
+  back:()=>{playTone(440,.06,'triangle',.07);setTimeout(()=>playTone(330,.1,'triangle',.07),55);},
+  fav:()=>{playTone(660,.1,'sine',.12);setTimeout(()=>playTone(880,.15,'sine',.1),100);},
+  unfav:()=>playTone(330,.12,'sine',.08),
+  start:()=>seq([262,330,392,523],.15,'triangle',.1,80),
+  skip:()=>playTone(200,.1,'sawtooth',.06),
+  timer:()=>playTone(880,.05,'square',.06),
+  coringa:()=>seq([440,554,659,880],.2,'sine',.1,100),
+  conquista:()=>seq([523,659,784,1047],.25,'triangle',.1,120),
+  score:()=>playTone(600,.07,'triangle',.08),
+  end:()=>seq([392,494,587,784],.22,'sine',.1,130),
+  win:()=>playTone(880,.3,'sine',.15)
+};
+
+/* ---------- Movimento reduzido ---------- */
+const mqReduce=window.matchMedia?matchMedia('(prefers-reduced-motion: reduce)'):{matches:false,addEventListener(){}};
+const isCalm=()=>S.settings.calm===null?mqReduce.matches:S.settings.calm;
+function applyCalm(){document.body.classList.toggle('calm',isCalm());}
+if(mqReduce.addEventListener)mqReduce.addEventListener('change',applyCalm);
+
+/* ---------- Tema ---------- */
+function applyTheme(){
+  const t=S.settings.night?'t-oled':S.settings.theme;
+  document.body.className=document.body.className.split(/\s+/).filter(c=>c&&!/^t-/.test(c)).concat(t).join(' ');
+  const m=$('#metaTheme');if(m){const bg=getComputedStyle(document.body).getPropertyValue('--bg').trim();if(bg)m.setAttribute('content',bg);}
+  applyCalm();
+}
+
+/* ---------- Toasts ---------- */
+function toast(msg,{kind='',icon='check',action=null,ms=2800}={}){
+  const box=$('#toasts');const el=document.createElement('div');
+  el.className='toast '+kind;el.setAttribute('role','status');
+  el.innerHTML=ic(icon)+'<span>'+esc(msg)+'</span>';
+  let timer;
+  const close=()=>{clearTimeout(timer);el.classList.add('out');setTimeout(()=>el.remove(),260);};
+  if(action){const b=document.createElement('button');b.className='t-act';b.textContent=action.label;b.onclick=()=>{close();action.run();};el.appendChild(b);}
+  box.appendChild(el);while(box.children.length>3)box.firstChild.remove();
+  timer=setTimeout(close,action?5200:ms);
+}
+
+/* ---------- Overlays e diálogos (com foco e Esc) ---------- */
+const overlayStack=[];
+let lastFocus=null;
+function openOverlay(el,onClose){
+  lastFocus=document.activeElement;
+  el.classList.remove('hidden');overlayStack.push({el,onClose});
+  setTimeout(()=>{const f=el.querySelector('button.primary,button');f&&f.focus();},30);
+  syncRuntime();
+}
+function closeOverlay(el){
+  const i=overlayStack.findIndex(o=>o.el===el);if(i<0)return;
+  const [o]=overlayStack.splice(i,1);el.classList.add('hidden');
+  if(lastFocus&&document.contains(lastFocus)&&!overlayStack.length)try{lastFocus.focus();}catch(e){}
+  o.onClose&&o.onClose();syncRuntime();
+}
+document.addEventListener('keydown',e=>{
+  const top=overlayStack[overlayStack.length-1];if(!top)return;
+  if(e.key==='Escape'){e.preventDefault();top.cancel?top.cancel():closeOverlay(top.el);}
+  if(e.key==='Tab'){const f=$$('button:not([disabled]),[href],input',top.el).filter(x=>x.offsetParent!==null);if(!f.length)return;
+    const a=f[0],b=f[f.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();b.focus();}else if(!e.shiftKey&&document.activeElement===b){e.preventDefault();a.focus();}}
+});
+$$('.overlay').forEach(ov=>ov.addEventListener('pointerdown',e=>{if(e.target===ov){const o=overlayStack.find(x=>x.el===ov);if(o)o.cancel?o.cancel():closeOverlay(ov);}}));
+
+/* ask({title,text,html,icon,warn,actions:[{label,value,kind}],cancel}) → Promise */
+function ask({title,text='',html='',icon='',warn=false,actions=[],cancel=null,row=false}){
+  return new Promise(res=>{
+    const ov=$('#ov-dialog'),sh=$('#dlgSheet');
+    sh.innerHTML=`<div class="sheet-handle"></div>${icon?`<div class="sheet-icon ${warn?'warn':''}">${ic(icon)}</div>`:''}
+      <h2 class="sheet-title" id="dlgTitle">${esc(title)}</h2>${text?`<p class="sheet-text">${esc(text)}</p>`:''}${html}
+      <div class="sheet-actions ${row?'row2':''}">${actions.map((a,i)=>`<button class="btn ${a.kind||''}" data-i="${i}">${a.icon?ic(a.icon):''}${esc(a.label)}</button>`).join('')}</div>`;
+    let done=false;
+    const finish=v=>{if(done)return;done=true;closeOverlay(ov);res(v);};
+    sh.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>finish(actions[+b.dataset.i].value));
+    openOverlay(ov,()=>{if(!done){done=true;res(cancel);}});
+    overlayStack[overlayStack.length-1].cancel=()=>finish(cancel);
+  });
+}
+const confirmDlg=(title,text,okLabel,{danger=true,icon='trash'}={})=>ask({title,text,icon,warn:danger,row:true,cancel:false,
+  actions:[{label:'Cancelar',value:false},{label:okLabel,value:true,kind:danger?'danger':'primary'}]});
+
+/* ---------- Dias juntos (calendário local, sem erro de fuso/horário de verão) ---------- */
+function daysTogether(now=new Date()){
+  const a=Date.UTC(START_DATE.y,START_DATE.m-1,START_DATE.d);
+  const b=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+  return Math.max(0,Math.round((b-a)/86400000));
+}
+function ymdTogether(now=new Date()){
+  let y=now.getFullYear()-START_DATE.y,m=now.getMonth()+1-START_DATE.m,d=now.getDate()-START_DATE.d;
+  if(d<0){m--;d+=new Date(now.getFullYear(),now.getMonth(),0).getDate();}
+  if(m<0){y--;m+=12;}
+  return{y:Math.max(0,y),m,d};
+}
+function ymdText({y,m,d}){
+  const p=[];if(y)p.push(y+(y===1?' ano':' anos'));if(m)p.push(m+(m===1?' mês':' meses'));if(d)p.push(d+(d===1?' dia':' dias'));
+  if(!p.length)return 'hoje é o começo';
+  return p.length>1?p.slice(0,-1).join(', ')+' e '+p[p.length-1]:p[0];
+}
+function renderDays(){
+  const now=new Date(),n=daysTogether(now),ymd=ymdTogether(now);
+  $('#daysNum').textContent=n.toLocaleString('pt-BR');
+  const sd=String(START_DATE.d).padStart(2,'0')+'/'+String(START_DATE.m).padStart(2,'0')+'/'+START_DATE.y;
+  $('#daysSince').textContent='desde '+sd+' · '+ymdText(ymd);
+  const card=$('#daysCard'),note=$('#daysNote');
+  const isAnniv=now.getMonth()===START_DATE.m-1&&now.getDate()===START_DATE.d&&now.getFullYear()>START_DATE.y;
+  let msg='';
+  if(isAnniv)msg=`Hoje faz ${ymd.y} ${ymd.y===1?'ano':'anos'} que vocês começaram essa história.`;
+  else if(n>0&&n%100===0)msg=`Hoje são ${n.toLocaleString('pt-BR')} dias. Um número bonito para comemorar a dois.`;
+  else if(now.getDate()===START_DATE.d&&n>0)msg='Hoje é dia '+START_DATE.d+': mais um mês de vocês dois.';
+  card.classList.toggle('special',!!msg);
+  note.textContent=msg;note.classList.toggle('hidden',!msg);
+  return isAnniv;
+}
+function maybeAnniversary(isAnniv){
+  if(!isAnniv)return;
+  const y=String(new Date().getFullYear());
+  if(LS.get(K.anniv)===y)return;
+  LS.set(K.anniv,y);
+  const n=daysTogether();
+  setTimeout(()=>ask({icon:'heart',title:'Feliz aniversário de vocês!',
+    text:`Hoje fazem ${n.toLocaleString('pt-BR')} dias juntos. Que essa noite seja especial — vocês merecem.`,
+    html:`<p class="serif" style="text-align:center;line-height:1.7;font-size:1.02rem;margin:-4px 0 18px;padding:14px 16px;border-radius:16px;background:rgba(var(--gold),.1);border:1px solid rgba(var(--gold),.3)">Desafio de aniversário: cada um conta a memória favorita do ano que passou juntos. Depois, um beijo longo, de verdade.</p>`,
+    actions:[{label:'Começar a celebrar',value:true,kind:'primary',icon:'sparkle'}],cancel:true}),900);
+}
+function greeting(){
+  const h=new Date().getHours();
+  const p=h<5?'Boa madrugada':h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  const [a,b]=names();
+  const named=(S.players.n1||'').trim()||(S.players.n2||'').trim();
+  return named?`${p}, ${a} & ${b}`:`${p}, vocês dois`;
+}
+
+/* ---------- Tela inicial ---------- */
+const CONTROLS={
+  game:[
+    {k:'startLevel',type:'seg',label:'Nível inicial',opts:[['leve','Leve'],['medio','Médio'],['picante','Picante']]},
+    {k:'limit',type:'seg',label:'Cartas por partida',opts:[[0,'Livre'],[10,'10'],[20,'20'],[30,'30']]},
+    {k:'timer',type:'tog',icon:'timer',label:'Cronômetro',sub:'avança a carta quando o tempo acaba'},
+    {k:'timerSecs',type:'seg',label:'Tempo por carta',opts:[[15,'15 s'],[30,'30 s'],[60,'60 s']],showIf:()=>S.settings.timer},
+    {k:'random',type:'tog',icon:'shuffle',label:'Modo aleatório',sub:'mistura todos os níveis'},
+    {k:'coringa',type:'tog',icon:'crown',label:'Carta coringa',sub:'surpresa a cada 7 cartas'},
+    {k:'score',type:'tog',icon:'trophy',label:'Placar no V ou D',sub:'pontos para cada jogador'}
+  ],
+  look:[
+    {k:'theme',type:'theme'},
+    {k:'night',type:'tog',icon:'moon',label:'Modo noite',sub:'máximo escuro (OLED)'},
+    {k:'sound',type:'tog',icon:'vol',label:'Efeitos sonoros'},
+    {k:'calm',type:'tog',icon:'motion',label:'Reduzir animações',sub:'mais calmo e econômico'}
+  ]
+};
+const THEME_OPTS=[['t-dark','Escuro'],['t-oled','OLED'],['t-light','Claro'],['t-wine','Vinho']];
+function controlHTML(c){
+  if(c.type==='tog')return `<button class="row" role="switch" data-act="tog" data-key="${c.k}" aria-checked="false">
+    <span class="row-ico">${ic(c.icon)}</span><span class="row-txt"><span class="row-lbl">${c.label}</span>${c.sub?`<span class="row-sub">${c.sub}</span>`:''}</span><span class="tog"></span></button>`;
+  if(c.type==='seg')return `<div class="row row-col" data-show="${c.k}"><div class="row-lbl" id="lbl-${c.k}-@">${c.label}</div>
+    <div class="seg" role="radiogroup" aria-labelledby="lbl-${c.k}-@">${c.opts.map(([v,l])=>`<button role="radio" data-act="seg" data-key="${c.k}" data-val="${v}" aria-checked="false">${l}</button>`).join('')}</div></div>`;
+  if(c.type==='theme')return `<div class="row row-col"><div class="row-lbl" id="lbl-theme-@">Tema</div><div class="themes" role="radiogroup" aria-labelledby="lbl-theme-@">
+    ${THEME_OPTS.map(([v,l])=>`<button class="theme-opt" role="radio" data-act="theme" data-val="${v}" aria-checked="false"><span class="tdot ${v}"></span>${l}</button>`).join('')}</div></div>`;
+  return '';
+}
+let ctlSeq=0;
+function buildControls(){
+  $$('[data-controls]').forEach(box=>{
+    const id=++ctlSeq;
+    box.innerHTML=CONTROLS[box.dataset.controls].map(controlHTML).join('').replace(/@/g,id);
+  });
+}
+function syncControls(){
+  const s=S.settings;
+  $$('[data-act=tog]').forEach(b=>{const k=b.dataset.key;let v=s[k];if(k==='calm')v=isCalm();b.setAttribute('aria-checked',String(!!v));});
+  $$('[data-act=seg]').forEach(b=>b.setAttribute('aria-checked',String(String(s[b.dataset.key])===b.dataset.val)));
+  $$('[data-act=theme]').forEach(b=>b.setAttribute('aria-checked',String(s.theme===b.dataset.val)));
+  CONTROLS.game.filter(c=>c.showIf).forEach(c=>$$(`[data-show="${c.k}"]`).forEach(el=>el.classList.toggle('hidden',!c.showIf())));
+  $$('.mode').forEach(m=>m.setAttribute('aria-checked',String(m.dataset.mode===s.mode)));
+  const sound=s.sound;
+  const bs=$('#btnSound');if(bs){bs.innerHTML=ic(sound?'vol':'volx');bs.classList.toggle('is-off',!sound);bs.setAttribute('aria-label',sound?'Desativar sons':'Ativar sons');}
+  const lv=s.random?'Misto':LEVEL_LABEL[s.startLevel];
+  $('#startSub').textContent=MODE_META[s.mode].short+' · '+lv+(s.limit?' · '+s.limit+' cartas':'');
+  const parts=[];if(s.limit)parts.push(s.limit+' cartas');if(s.timer)parts.push(s.timerSecs+'s');if(s.random)parts.push('misto');
+  const gb=$('#gameBadge');gb.textContent=parts.join(' · ');gb.classList.toggle('hidden',!parts.length);
+}
+function renderNames(){
+  $$('[data-name]').forEach(inp=>{const v=inp.dataset.name==='0'?S.players.n1:S.players.n2;if(document.activeElement!==inp)inp.value=v;});
+  $('#greet').textContent=greeting();
+}
+function renderStatsTiles(){
+  $('#statCartas').textContent=S.stats.perguntas.toLocaleString('pt-BR');
+  $('#statSessoes').textContent=S.stats.sessoes.toLocaleString('pt-BR');
+  $('#statFavs').textContent=S.favs.length.toLocaleString('pt-BR');
+  const n=S.history.length;
+  const hs=$('#histSub');if(hs)hs.textContent=n?n+(n===1?' partida concluída':' partidas concluídas'):'nenhuma partida concluída';
+}
+function renderResume(){
+  const c=$('#resumeCard');
+  if(!sess){c.classList.add('hidden');$('#startLbl').textContent='Começar';return;}
+  c.classList.remove('hidden');
+  $('#resumeInfo').textContent=MODE_META[sess.mode].short+' · '+LEVEL_LABEL[sess.levelKey]+' · '+sess.seen+(sess.seen===1?' carta':' cartas');
+  $('#startLbl').textContent='Nova partida';
+}
+
+/* perguntas personalizadas */
+let cqDest='perg',cqLevel='all',cqUndo=null;
+function renderCustom(){
+  const list=$('#cqList');
+  $('#cqBadge').textContent=S.custom.length;$('#cqBadge').classList.toggle('hidden',!S.custom.length);
+  if(!S.custom.length){list.innerHTML='<p class="empty-mini">Nenhuma pergunta de vocês ainda.<br>Escreva a primeira acima.</p>';return;}
+  list.innerHTML=S.custom.slice().reverse().map(c=>`<div class="cq-item" data-id="${esc(c.id)}">
+    <div class="cq-item-txt"><span class="cq-item-tag">${CQ_DEST[c.dest]} · ${CQ_LEVEL[c.level]}</span>${esc(c.text)}</div>
+    <button class="cq-del" data-act="cqDel" data-arg="${esc(c.id)}" aria-label="Excluir pergunta: ${esc(c.text.slice(0,40))}">${ic('trash')}</button></div>`).join('');
+}
+function cqMsg(t,kind=''){const m=$('#cqMsg');m.textContent=t;m.className='field-msg '+kind;$('#cqText').classList.toggle('bad',kind==='bad');}
+function isDuplicateCustom(text,dest){
+  const k=norm(text);
+  if(S.custom.some(c=>c.dest===dest&&norm(c.text)===k))return 'Você já adicionou essa pergunta.';
+  if(!LOOKUP)buildLookup();
+  const hit=LOOKUP.get(k);
+  if(hit){const same=(dest==='perg'&&hit.mode==='perg')||((dest==='verdade'||dest==='desafio')&&hit.mode==='vdd')||(dest==='en'&&hit.mode==='en');
+    if(same)return 'Essa pergunta já existe no jogo.';}
+  return '';
+}
+function addCustom(){
+  const inp=$('#cqText');const text=inp.value.replace(/\s+/g,' ').trim();
+  if(!text){cqMsg('Escreva uma pergunta antes de adicionar.','bad');inp.focus();return;}
+  if(text.length<5){cqMsg('A pergunta está muito curta.','bad');inp.focus();return;}
+  const dup=isDuplicateCustom(text,cqDest);
+  if(dup){cqMsg(dup,'bad');inp.focus();return;}
+  S.custom.push({id:uid(),text,dest:cqDest,level:cqLevel,at:Date.now()});
+  saveCustom();inp.value='';$('#cqLen').textContent='0';
+  cqMsg('Pergunta adicionada em '+CQ_DEST[cqDest]+' · '+CQ_LEVEL[cqLevel]+'.','ok');
+  renderCustom();sfx.reveal();
+}
+function delCustom(id){
+  const i=S.custom.findIndex(c=>c.id===id);if(i<0)return;
+  const [removed]=S.custom.splice(i,1);saveCustom();renderCustom();cqMsg('');
+  toast('Pergunta excluída',{icon:'trash',action:{label:'Desfazer',run:()=>{S.custom.splice(Math.min(i,S.custom.length),0,removed);saveCustom();renderCustom();toast('Pergunta restaurada');}}});
+}
+
+/* =====================================================================
+   PARTIDA (sessão, baralhos, cartas)
+   ===================================================================== */
+let sess=null,lastSummary=null,currentScreen='home',busy=false;
+
+function builtinCards(mode,level){
+  if(mode==='perg')return PERGUNTAS[level].map(t=>({text:t,level}));
+  if(mode==='vdd')return VDD[level].map(c=>({text:c.q,type:c.t,level}));
+  return EU_NUNCA[level].map(t=>({text:t,level}));
+}
+const customMode=d=>d==='perg'?'perg':d==='en'?'en':'vdd';
+function customCards(mode,level){
+  return S.custom.filter(c=>customMode(c.dest)===mode&&(c.level==='all'||c.level===level)).map(c=>({
+    text:c.text,level,custom:true,type:c.dest==='verdade'?'V':c.dest==='desafio'?'D':undefined}));
+}
+function makeDeck(mode,key){
+  let cards=[];
+  if(key==='mix'){
+    LEVELS.forEach(l=>cards.push(...builtinCards(mode,l)));
+    S.custom.filter(c=>customMode(c.dest)===mode).forEach(c=>cards.push({text:c.text,custom:true,
+      level:c.level==='all'?LEVELS[Math.floor(Math.random()*3)]:c.level,type:c.dest==='verdade'?'V':c.dest==='desafio'?'D':undefined}));
+  }else cards=builtinCards(mode,key).concat(customCards(mode,key));
+  const seen=new Set();
+  cards=cards.filter(c=>{const k=norm(c.text);if(seen.has(k))return false;seen.add(k);return true;});   // evita repetir texto idêntico
+  return{cards:shuffle(cards),ptr:0};
+}
+const getDeck=key=>sess.decks[key]||(sess.decks[key]=makeDeck(sess.mode,key));
+const cur=()=>sess?sess.log[sess.pos]:null;
+const canDealReal=key=>{const d=getDeck(key);return d.ptr<d.cards.length;};
+function nextCoringaText(){
+  if(!sess.coringaBag.length)sess.coringaBag=shuffle(CORINGAS.map(cleanCoringa));
+  return sess.coringaBag.pop();
+}
+function pickPlayer(forced){
+  if(sess.mode!=='vdd')return null;
+  if(forced!=null)return forced;
+  for(let i=sess.log.length-1;i>=0;i--){const e=sess.log[i];if(e.kind==='card')return e.left?1-e.player:e.player;}
+  return sess.firstPlayer;
+}
+/* cria a próxima carta (ou coringa); devolve null se o baralho acabou */
+function deal(forcedPlayer){
+  if(S.settings.coringa&&sess.sinceCoringa>=CORINGA_EVERY){
+    sess.sinceCoringa=0;sess.coringaCount++;S.stats.coringas++;saveStats();
+    let last=null;for(let i=sess.log.length-1;i>=0;i--)if(sess.log[i].kind==='card'){last=sess.log[i];break;}
+    return{kind:'coringa',mode:sess.mode,level:'coringa',text:nextCoringaText(),type:null,custom:false,player:null,responder:null,
+      counted:false,left:null,deckIdx:last?last.deckIdx:0,deckTotal:last?last.deckTotal:0};
+  }
+  const key=sess.levelKey,deck=getDeck(key);
+  if(deck.ptr>=deck.cards.length)return null;
+  const src=deck.cards[deck.ptr++];
+  return{kind:'card',mode:sess.mode,level:src.level,text:src.text,type:src.type||null,custom:!!src.custom,player:pickPlayer(forcedPlayer),
+    responder:null,counted:false,left:null,src,deckKey:key,deckIdx:deck.ptr,deckTotal:deck.cards.length};
+}
+function undeal(e){
+  if(!e||e.kind!=='card'||e.counted)return;
+  const d=sess.decks[e.deckKey];if(d&&d.cards[d.ptr-1]===e.src)d.ptr--;
+}
+function push(e){sess.log.push(e);sess.pos=sess.log.length-1;}
+function registerSession(){
+  if(sess.registered)return;sess.registered=true;
+  S.stats.sessoes++;if(!S.stats.modos.includes(sess.mode))S.stats.modos.push(sess.mode);saveStats();
+}
+/* "sair" de uma carta: é o único lugar onde cartas vistas entram nas estatísticas (uma vez por carta) */
+function leaveCard(e,how){
+  if(!e)return;
+  if(!e.left)e.left=how;
+  if(e.counted)return;
+  e.counted=true;
+  if(e.kind==='card'){
+    S.stats.perguntas++;sess.seen++;sess.sinceCoringa++;sess.levelsPlayed.add(e.level);
+    S.stats.maxCartas=Math.max(S.stats.maxCartas,sess.seen);
+    registerSession();saveStats();
+  }
+  checkConquistas();
+}
+function jumpToEnd(){if(sess.pos!==sess.log.length-1){sess.pos=sess.log.length-1;}}
+
+async function startSession(force=false){
+  if(sess&&sess.seen>0&&!force){
+    const r=await ask({icon:'cards',title:'Já tem uma partida em andamento',
+      text:'Começar uma nova encerra a atual sem resumo. As cartas já vistas continuam nas estatísticas.',
+      actions:[{label:'Continuar a atual',value:'resume',kind:'primary'},{label:'Começar uma nova',value:'new'}],cancel:'resume'});
+    if(r==='resume'){navigate('game');return;}
+  }
+  getAC();
+  const mode=S.settings.mode;
+  sess={mode,levelKey:S.settings.random?'mix':S.settings.startLevel,decks:{},log:[],pos:-1,skips:SKIPS_PER_SESSION,skipCount:0,
+    seen:0,sinceCoringa:0,coringaCount:0,coringaBag:[],favSet:new Set(),scores:[0,0],activeMs:0,clockRunning:false,clockLast:0,
+    registered:false,levelsPlayed:new Set(),unlockedIds:[],limit:S.settings.limit,firstPlayer:0};
+  const d=deal();if(!d){sess=null;toast('Não há cartas disponíveis.',{kind:'err',icon:'close'});return;}
+  push(d);sfx.start();busy=false;
+  showScreen('game');setupGameUI();showCard('deal');
+}
+function advance(how='next'){
+  if(!sess||busy)return;
+  if(sess.pos<sess.log.length-1){sess.pos++;sfx.next();showCard('next');return;}
+  const e=cur();
+  leaveCard(e,how);
+  if(sess.limit&&sess.seen>=sess.limit){finishSession('limit');return;}
+  const d=deal();
+  if(!d){exhausted();return;}
+  push(d);
+  d.kind==='coringa'?sfx.coringa():sfx.next();
+  showCard('next');checkConquistas();
+}
+function goBack(){if(!sess||busy||sess.pos<=0)return;sess.pos--;sfx.back();showCard('back');}
+function skip(){
+  if(!sess||busy)return;
+  const e=cur();if(!e||sess.pos!==sess.log.length-1||e.kind==='coringa')return;
+  if(sess.skips<=0){toast('Os pulos desta partida acabaram.',{icon:'skip'});return;}
+  if(!canDealReal(sess.levelKey)){toast('Não há mais cartas neste nível para trocar.',{icon:'layers'});return;}
+  sess.skips--;sess.skipCount++;S.stats.puladas++;saveStats();
+  const forced=e.player;
+  sess.log.pop();                                    // a carta pulada sai do caminho (não vira "vista")
+  const d=deal(forced);push(d);sfx.skip();showCard('next');
+}
+function setLevel(key){
+  if(!sess||busy||key===sess.levelKey)return;
+  if(!canDealReal(key)){toast('Acabaram as cartas deste nível.',{icon:'layers'});return;}
+  jumpToEnd();
+  const e=cur();let forced=null;
+  if(e&&e.kind==='card'&&!e.counted){forced=e.player;undeal(e);sess.log.pop();}   // carta ainda não vista volta ao baralho
+  else if(e&&e.kind==='coringa')leaveCard(e,'level');
+  sess.levelKey=key;
+  S.settings.random=key==='mix';saveSettings();syncControls();
+  const d=deal(forced);push(d);sfx.next();showCard('next');
+}
+function shuffleDeck(){
+  if(!sess||busy)return;
+  jumpToEnd();
+  const e=cur(),key=sess.levelKey,deck=getDeck(key);
+  const reshuffleRest=()=>{deck.cards=deck.cards.slice(0,deck.ptr).concat(shuffle(deck.cards.slice(deck.ptr)));};
+  if(!e||e.kind==='coringa'){reshuffleRest();toast('Cartas embaralhadas.',{icon:'shuffle'});return;}
+  let forced=null;
+  if(!e.counted){forced=e.player;undeal(e);sess.log.pop();}
+  if(deck.ptr>=deck.cards.length){if(!e.counted)push(e);toast('Não há mais cartas para embaralhar.',{icon:'layers'});return;}
+  reshuffleRest();
+  const d=deal(forced);push(d);sfx.next();showCard('next');
+  toast('Cartas restantes embaralhadas.',{icon:'shuffle'});
+}
+async function exhausted(){
+  const lvl=sess.levelKey==='mix'?'todas as cartas':'as cartas do nível '+LEVEL_LABEL[sess.levelKey];
+  const r=await ask({icon:'layers',title:'Acabaram '+lvl,
+    text:'Vocês podem escolher outro nível nas abas, embaralhar tudo de novo ou encerrar para ver o resumo.',
+    actions:[{label:'Ver resumo',value:'finish',kind:'primary',icon:'flag'},{label:'Embaralhar e continuar',value:'again',icon:'shuffle'},{label:'Ficar aqui',value:'stay'}],cancel:'stay'});
+  if(!sess)return;
+  if(r==='finish')finishSession('deck');
+  else if(r==='again'){sess.decks[sess.levelKey]=makeDeck(sess.mode,sess.levelKey);const d=deal();if(d){push(d);showCard('next');}}
+}
+async function endAsk(){
+  if(!sess)return;
+  const e=cur(),potential=sess.seen+((e&&e.kind==='card'&&!e.counted)?1:0);
+  if(potential<1){discardSession();return;}
+  const r=await ask({icon:'flag',title:'Encerrar a partida?',text:'Vocês podem ver o resumo (e salvar no histórico) ou continuar jogando.',
+    actions:[{label:'Ver resumo e salvar',value:'finish',kind:'primary',icon:'check'},{label:'Continuar jogando',value:'stay'},{label:'Sair sem salvar',value:'discard',kind:'danger'}],cancel:'stay'});
+  if(!sess)return;
+  if(r==='finish')finishSession('manual');else if(r==='discard')discardSession();
+}
+function discardSession(){
+  if(!sess)return;clockSync(false);sess=null;stopLoop();
+  navigate('home');
+}
+function finishSession(reason){
+  if(!sess)return;
+  const e=cur();if(e&&e.kind==='card'&&!e.counted)leaveCard(e,'end');
+  clockSync(false);stopLoop();
+  const s=sess,dur=Math.round(s.activeMs);
+  if(s.seen<1){discardSession();return;}
+  S.stats.concluidas++;S.stats.tempo+=dur;S.stats.maxCartas=Math.max(S.stats.maxCartas,s.seen);saveStats();
+  checkConquistas();
+  const rec={id:uid(),ts:Date.now(),mode:s.mode,levels:LEVELS.filter(l=>s.levelsPlayed.has(l)),names:names(),dur,cards:s.seen,
+    skips:s.skipCount,coringas:s.coringaCount,favs:s.favSet.size,scores:(s.mode==='vdd'&&S.settings.score)?[...s.scores]:null,conq:[...s.unlockedIds]};
+  S.history.unshift(rec);S.history=S.history.slice(0,MAX_HISTORY);saveHistory();
+  lastSummary={rec,reason};sess=null;
+  sfx.end();renderSummary();showScreen('summary');
+}
+
+/* ---------- Relógio da sessão e cronômetro (um único intervalo, pausa em segundo plano) ---------- */
+function clockSync(run){
+  if(!sess)return;const now=performance.now();
+  if(run&&!sess.clockRunning){sess.clockRunning=true;sess.clockLast=now;}
+  else if(!run&&sess.clockRunning){sess.activeMs+=now-sess.clockLast;sess.clockRunning=false;}
+}
+const T={id:null,remaining:0,total:0,last:0,lastSec:-1};
+function paintTimer(){
+  const box=$('#timer');if(!box)return;
+  const on=!!(sess&&S.settings.timer);box.classList.toggle('hidden',!on);if(!on)return;
+  const sec=Math.max(0,Math.ceil(T.remaining/1000));
+  $('#timerTxt').textContent=sec;$('#timerFill').style.width=(T.total?clamp(T.remaining/T.total,0,1)*100:0)+'%';
+  box.classList.toggle('low',sec<=5);
+}
+function resetTimer(){T.total=S.settings.timerSecs*1000;T.remaining=T.total;T.lastSec=-1;T.last=performance.now();paintTimer();}
+function tickTimer(){
+  const now=performance.now();T.remaining-=now-T.last;T.last=now;
+  const sec=Math.ceil(T.remaining/1000);
+  if(sec!==T.lastSec){T.lastSec=sec;if(sec<=5&&sec>0)sfx.timer();}
+  if(T.remaining<=0){T.remaining=0;paintTimer();stopLoop();advance('timer');return;}
+  paintTimer();
+}
+function startLoop(){if(T.id)return;T.last=performance.now();T.id=setInterval(tickTimer,200);}
+function stopLoop(){if(T.id){clearInterval(T.id);T.id=null;}}
+function syncRuntime(){
+  const onGame=!!(sess&&currentScreen==='game'&&!document.hidden);
+  clockSync(onGame);
+  if(onGame&&S.settings.timer&&!overlayStack.length)startLoop();else stopLoop();
+}
+document.addEventListener('visibilitychange',()=>{syncRuntime();if(!document.hidden&&currentScreen==='home')renderDays();});
+window.addEventListener('pagehide',()=>{stopLoop();if(sess)clockSync(false);});
+
+/* ---------- Telas e navegação ---------- */
+const NAV_OF={home:'home',game:'game',favs:'favs',conquistas:'conquistas',settings:'settings',history:'settings',summary:null};
+function showScreen(name){
+  currentScreen=name;
+  $$('.screen').forEach(s=>s.classList.add('hidden'));
+  $('#screen-'+name).classList.remove('hidden');
+  $('#nav').classList.toggle('hidden',name==='summary');
+  $$('.nav-tab').forEach(t=>t.classList.toggle('on',t.id==='nt-'+NAV_OF[name]));
+  const g=$('#nt-game');let dot=g.querySelector('.nav-dot');
+  const wantDot=!!sess&&name!=='game';
+  if(wantDot&&!dot){dot=document.createElement('span');dot.className='nav-dot';g.appendChild(dot);}else if(!wantDot&&dot)dot.remove();
+  if(name==='home')renderHome();
+  else if(name==='favs')renderFavs();
+  else if(name==='conquistas')renderConq();
+  else if(name==='settings'){syncControls();renderNames();renderStatsTiles();}
+  else if(name==='history')renderHistory();
+  window.scrollTo(0,0);
+  syncRuntime();
+}
+function navigate(name){
+  if(name==='game'){
+    if(!sess){toast('Escolha um modo e toque em Começar.',{icon:'cards'});name='home';}
+    else{showScreen('game');setupGameUI();paint();return;}
+  }
+  showScreen(name);
+}
+function renderHome(){
+  const a=renderDays();renderNames();renderStatsTiles();renderResume();renderCustom();syncControls();return a;
+}
+
+/* ---------- Interface da partida ---------- */
+function setupGameUI(){
+  if(!sess)return;
+  const g=$('#screen-game');g.dataset.mode=sess.mode;
+  $('#gMode').textContent=MODE_META[sess.mode].name;
+  $('#timer').classList.toggle('hidden',!S.settings.timer);
+  paint();
+}
+function sizeOf(t){const n=t.length;return n<70?'s':n<130?'m':n<200?'l':'xl';}
+function paint(){
+  const e=cur();if(!sess||!e)return;
+  const [n1,n2]=names();
+  const g=$('#screen-game'),card=$('#card');
+  $('#gCouple').textContent=n1+' & '+n2;
+  const isCor=e.kind==='coringa';
+  g.dataset.lv=isCor?'coringa':e.level;
+  card.dataset.level=isCor?'leve':e.level;card.dataset.kind=e.kind;card.dataset.size=sizeOf(e.text);
+  $('#cardText').textContent=e.text;
+  // selo + meta
+  let bi,bt,meta='';
+  if(isCor){bi='crown';bt='Coringa';meta=ic('sparkle')+'surpresa';}
+  else if(sess.mode==='perg'){bi=LEVEL_ICON[e.level];bt=LEVEL_LABEL[e.level];meta=e.custom?ic('pencil')+'Sua pergunta':'';}
+  else if(sess.mode==='vdd'){bi=e.type==='V'?'chat':'bolt';bt=e.type==='V'?'Verdade':'Desafio';meta=e.custom?ic('pencil')+'Sua':ic(LEVEL_ICON[e.level])+LEVEL_LABEL[e.level];}
+  else{bi='eyeoff';bt='Eu nunca';meta=e.custom?ic('pencil')+'Sua':ic(LEVEL_ICON[e.level])+LEVEL_LABEL[e.level];}
+  $('#cardBadge').innerHTML=ic(bi)+'<span>'+esc(bt)+'</span>';
+  $('#cardMeta').innerHTML=meta;
+  // de quem é a vez
+  const turn=$('#cardTurn'),tt=$('#cardTurnTxt');
+  turn.classList.remove('big');turn.classList.add('hidden');
+  if(!isCor){
+    if(sess.mode==='vdd'&&e.player!=null){
+      turn.classList.remove('hidden');turn.classList.add('big');turn.style.setProperty('--tp',e.player===0?'var(--p1)':'var(--p2)');
+      tt.innerHTML='Vez de <b>'+esc(e.player===0?n1:n2)+'</b>';
+    }else if(e.responder!=null){
+      turn.classList.remove('hidden');turn.style.setProperty('--tp',e.responder===0?'var(--p1)':'var(--p2)');
+      tt.innerHTML='<b>'+esc(e.responder===0?n1:n2)+'</b> responde primeiro';
+    }else if(sess.mode==='perg'){
+      turn.classList.remove('hidden');turn.style.setProperty('--tp','var(--acc-rgb)');tt.textContent='Os dois respondem';
+    }
+  }
+  // dica
+  $('#cardHint').textContent=isCor?'Façam juntos, com calma.':sess.mode==='en'?'quem já fez, assume ou beba 😈':(sess.seen<2?'Deslize para o lado ou use os botões.':'');
+  // contador e progresso
+  const shown=sess.seen+((e.kind==='card'&&!e.counted)?1:0);
+  let cnt=e.deckTotal?`${e.deckIdx} / ${e.deckTotal}`:'';
+  if(sess.limit)cnt=`Carta ${Math.min(shown,sess.limit)} de ${sess.limit}`;
+  $('#gCount').textContent=cnt;
+  const pct=sess.limit?Math.min(100,shown/sess.limit*100):(e.deckTotal?e.deckIdx/e.deckTotal*100:0);
+  $('#progressFill').style.width=pct.toFixed(1)+'%';$('#progressBar').setAttribute('aria-valuenow',String(Math.round(pct)));
+  // abas
+  $$('#gTabs .tab').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.level===sess.levelKey)));
+  // pular / voltar / embaralhar
+  const atEnd=sess.pos===sess.log.length-1;
+  $('#skipPill').textContent=sess.skips;
+  const sk=$('#skipBtn');sk.setAttribute('aria-disabled',String(sess.skips<=0||isCor||!atEnd));
+  $('#btnBack').disabled=sess.pos<=0;
+  $$('[data-act=shuffleDeck]').forEach(b=>b.setAttribute('aria-disabled',String(!atEnd)));
+  paintFav();paintScores();paintTimer();
+  $('#liveCard').textContent=bt+'. '+e.text;
+}
+function paintFav(pop){
+  const e=cur(),b=$('#btnFav');if(!e||!b)return;
+  const on=S.favs.some(f=>norm(f.text)===norm(e.text));
+  b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));b.setAttribute('aria-label',on?'Remover das favoritas':'Favoritar carta');
+  if(pop){b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');}
+}
+function paintScores(bump){
+  const box=$('#scores');if(!sess)return;
+  const show=sess.mode==='vdd'&&S.settings.score;box.classList.toggle('hidden',!show);if(!show)return;
+  const [n1,n2]=names(),e=cur();
+  [0,1].forEach(i=>{
+    $('#scName'+i).textContent=i?n2:n1;
+    const v=$('#scVal'+i);v.textContent=sess.scores[i];
+    $('#scMinus'+i).disabled=sess.scores[i]<=0;
+    $('#sc'+i).classList.toggle('turn-on',!!e&&e.kind==='card'&&e.player===i);
+    if(bump===i){v.classList.remove('bump');void v.offsetWidth;v.classList.add('bump');}
+  });
+}
+function showCard(dir){
+  const card=$('#card');resetTimer();
+  card.classList.remove('out-l','out-r','in-l','in-r','deal');
+  if(!dir||isCalm()){paint();return;}
+  if(dir==='deal'){paint();void card.offsetWidth;card.classList.add('deal');setTimeout(()=>card.classList.remove('deal'),540);return;}
+  busy=true;card.classList.add(dir==='back'?'out-r':'out-l');
+  setTimeout(()=>{
+    paint();card.classList.remove('out-l','out-r');void card.offsetWidth;
+    card.classList.add(dir==='back'?'in-l':'in-r');busy=false;
+    setTimeout(()=>card.classList.remove('in-l','in-r'),320);
+  },140);
+}
+function toggleFav(){
+  const e=cur();if(!e)return;
+  const key=norm(e.text),i=S.favs.findIndex(f=>norm(f.text)===key);
+  if(i>=0){S.favs.splice(i,1);sess&&sess.favSet.delete(key);sfx.unfav();toast('Removida das favoritas',{icon:'heart'});}
+  else{S.favs.unshift({text:e.text,mode:e.mode,level:e.kind==='coringa'?'coringa':e.level,type:e.type,at:Date.now()});sess&&sess.favSet.add(key);sfx.fav();toast('Salva nas favoritas',{icon:'heart'});}
+  saveFavs();paintFav(true);renderStatsTiles();checkConquistas();
+}
+function changeScore(i,d){
+  if(!sess)return;const v=clamp(sess.scores[i]+d,0,99);if(v===sess.scores[i])return;
+  sess.scores[i]=v;sfx.score();paintScores(i);
+}
+
+/* gestos: deslizar para os lados (os botões continuam visíveis) */
+(function(){
+  const stage=$('#stage'),card=$('#card');let sw=null;
+  stage.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return;if(e.target.closest('button')||busy)return;
+    sw={x:e.clientX,y:e.clientY,dx:0,locked:false,id:e.pointerId};
+  });
+  stage.addEventListener('pointermove',e=>{
+    if(!sw)return;const dx=e.clientX-sw.x,dy=e.clientY-sw.y;
+    if(!sw.locked){
+      if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.4){sw.locked=true;try{stage.setPointerCapture(e.pointerId);}catch(_){}}
+      else if(Math.abs(dy)>14){sw=null;return;}
+    }
+    if(sw.locked){sw.dx=dx;card.style.transform=`translateX(${dx*.45}px) rotate(${dx*.018}deg)`;card.style.opacity=String(1-Math.min(.35,Math.abs(dx)/520));}
+  });
+  const end=()=>{
+    if(!sw)return;const {dx,locked}=sw;sw=null;
+    card.style.transform='';card.style.opacity='';
+    if(locked){if(dx<-70)advance('swipe');else if(dx>70)goBack();}
+  };
+  stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);
+})();
+document.addEventListener('keydown',e=>{
+  if(currentScreen!=='game'||overlayStack.length||/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;
+  if(e.key==='ArrowRight')advance('next');else if(e.key==='ArrowLeft')goBack();
+});
+
+/* ---------- Roleta ---------- */
+let wheelRot=0,spinning=false;
+function openRoleta(){
+  if(!sess)return;
+  const [a,b]=names();$('#wheelL0').textContent=a;$('#wheelL1').textContent=b;
+  $('#wheelRes').textContent='';$('#wheelNote').textContent='Toque em girar para sortear.';
+  $('#btnSpin').disabled=false;$('#spinLbl').textContent='Girar';
+  openOverlay($('#ov-roleta'));
+}
+function spin(){
+  if(spinning||!sess)return;
+  spinning=true;$('#btnSpin').disabled=true;
+  const winner=Math.random()<.5?0:1;                       // o vencedor é decidido antes e a roda é calculada para parar nele
+  const theta=winner*180+22+Math.random()*136;            // ponto da roda que ficará sob o ponteiro (dentro da fatia do vencedor)
+  const targetMod=(360-theta)%360,curMod=((wheelRot%360)+360)%360;
+  const extra=(targetMod-curMod+360)%360;
+  const R=wheelRot+360*5+extra;
+  const wheel=$('#wheel');
+  $('#wheelRes').textContent='';$('#wheelNote').textContent='Girando…';
+  wheel.style.transform=`rotate(${R}deg)`;wheelRot=R;sfx.start();
+  let done=false;
+  const fin=()=>{
+    if(done)return;done=true;spinning=false;wheel.removeEventListener('transitionend',onEnd);
+    const nm=names()[winner];
+    const res=$('#wheelRes');res.textContent=nm;res.classList.remove('pop');void res.offsetWidth;res.classList.add('pop');
+    sfx.win();$('#btnSpin').disabled=false;$('#spinLbl').textContent='Girar de novo';
+    const e=cur();
+    if(sess&&e&&e.kind==='card'){
+      if(sess.mode==='vdd')e.player=winner;else e.responder=winner;
+      paint();$('#wheelNote').textContent=(sess.mode==='vdd'?'Agora é a vez de ':'Responde primeiro: ')+nm+'.';
+    }else $('#wheelNote').textContent=nm+' começa.';
+  };
+  const onEnd=ev=>{if(ev.target===wheel&&ev.propertyName==='transform')fin();};
+  wheel.addEventListener('transitionend',onEnd);
+  setTimeout(fin,isCalm()?900:4200);
+}
+const closeRoleta=()=>{if(!spinning)closeOverlay($('#ov-roleta'));};
+
+/* ---------- Conquistas ---------- */
+const statValue=c=>c.stat==='favs'?S.favs.length:c.stat==='modosN'?S.stats.modos.length:(S.stats[c.stat]||0);
+function checkConquistas(){
+  const fresh=[];
+  CONQUISTAS_DEF.forEach(c=>{if(!S.unlocked.includes(c.id)&&statValue(c)>=c.goal){S.unlocked.push(c.id);fresh.push(c);}});
+  if(fresh.length){
+    writeJSON(K.unlocked,S.unlocked);
+    fresh.forEach((c,i)=>{
+      if(sess)sess.unlockedIds.push(c.id);
+      setTimeout(()=>{sfx.conquista();toast('Conquista: '+c.name,{kind:'gold',icon:c.ico,ms:3800});},350+i*900);
+    });
+  }
+  return fresh;
+}
+function renderConq(){
+  const total=CONQUISTAS_DEF.length,got=CONQUISTAS_DEF.filter(c=>S.unlocked.includes(c.id)).length;
+  $('#conqRing').innerHTML=`<div class="conq-ring-n">${got}/${total}</div><div class="conq-ring-t">conquistas desbloqueadas<div class="bar" style="margin-top:8px"><i style="width:${got/total*100}%"></i></div></div>`;
+  const st=S.stats,tiles=[[st.perguntas,'cartas vistas'],[st.puladas,'puladas'],[st.sessoes,'sessões'],[st.concluidas,'concluídas'],[st.coringas,'coringas'],[st.tempo?fmtDur(st.tempo):'—','tempo de jogo']];
+  $('#conqStats').innerHTML=tiles.map(([n,l])=>`<div class="tile"><span class="tile-n">${typeof n==='number'?n.toLocaleString('pt-BR'):n}</span><span class="tile-l">${l}</span></div>`).join('');
+  $('#conqList').innerHTML=CONQUISTAS_DEF.map(c=>{
+    const done=S.unlocked.includes(c.id),v=Math.min(statValue(c),c.goal);
+    return `<div class="conq ${done?'done':'locked'}"><div class="conq-ico">${ic(done?c.ico:'lock')}</div>
+      <div class="conq-info"><div class="conq-name">${esc(c.name)}${done?ic('check'):''}</div><div class="conq-desc">${esc(c.desc)}</div>
+      ${done?'':`<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${c.goal}" aria-valuenow="${v}" aria-label="Progresso de ${esc(c.name)}"><i style="width:${v/c.goal*100}%"></i></div><div class="conq-desc">${v} de ${c.goal}</div>`}</div></div>`;
+  }).join('');
+}
+
+/* ---------- Favoritas ---------- */
+let favFilter='all';
+function renderFavs(){
+  const list=$('#favsList'),fil=$('#favFilters');
+  const n=S.favs.length;$('#favsSub').textContent=n?n+(n===1?' carta guardada':' cartas guardadas'):'as cartas que vocês quiserem guardar';
+  if(!n){
+    fil.innerHTML='';
+    list.innerHTML=`<div class="empty"><div class="empty-ico">${ic('heart')}</div><h2>Nada guardado ainda</h2>
+      <p>Durante o jogo, toque no coração para guardar as cartas que mais gostaram. Elas ficam aqui para voltar quando quiserem.</p>
+      <button class="btn primary" data-act="go" data-arg="home">${ic('play')}Começar a jogar</button></div>`;
+    return;
+  }
+  const counts={all:n};MODE_KEYS.forEach(m=>counts[m]=S.favs.filter(f=>f.mode===m).length);
+  if(favFilter!=='all'&&!counts[favFilter])favFilter='all';
+  const opts=[['all','Todas']].concat(MODE_KEYS.filter(m=>counts[m]).map(m=>[m,MODE_META[m].short]));
+  fil.innerHTML=opts.length>2?opts.map(([k,l])=>`<button class="chip" role="radio" data-act="favFilter" data-arg="${k}" aria-checked="${favFilter===k}">${l} <span style="opacity:.7">${counts[k]}</span></button>`).join(''):'';
+  list.innerHTML=S.favs.filter(f=>favFilter==='all'||f.mode===favFilter).map(f=>{
+    const lv=f.level==='coringa'||!f.level?'x':f.level;
+    const tag=f.level==='coringa'?'Coringa':MODE_META[f.mode].short+(f.level?' · '+LEVEL_LABEL[f.level]:'');
+    return `<article class="fav lv-${lv}"><div class="fav-body"><div class="fav-tag">${ic(f.level==='coringa'?'crown':f.mode==='vdd'&&f.type?(f.type==='V'?'chat':'bolt'):MODE_META[f.mode].icon)}${esc(tag)}</div>
+      <p class="fav-q">${esc(f.text)}</p></div>
+      <button class="fav-del" data-act="favDel" data-arg="${esc(norm(f.text))}" aria-label="Remover das favoritas">${ic('trash')}</button></article>`;
+  }).join('');
+}
+function delFav(key){
+  const i=S.favs.findIndex(f=>norm(f.text)===key);if(i<0)return;
+  const [removed]=S.favs.splice(i,1);saveFavs();renderFavs();renderStatsTiles();
+  toast('Removida das favoritas',{icon:'heart',action:{label:'Desfazer',run:()=>{S.favs.splice(Math.min(i,S.favs.length),0,removed);saveFavs();renderFavs();renderStatsTiles();}}});
+}
+
+/* ---------- Histórico ---------- */
+function renderHistory(){
+  const list=$('#historyList'),n=S.history.length;
+  $('#historySub').textContent=n?n+(n===1?' partida concluída':' partidas concluídas'):'partidas concluídas aparecem aqui';
+  if(!n){list.innerHTML=`<div class="empty"><div class="empty-ico">${ic('history')}</div><h2>Ainda sem partidas</h2>
+    <p>Quando vocês encerrarem uma partida e virem o resumo, ela fica registrada aqui, com data, duração e placar.</p>
+    <button class="btn primary" data-act="go" data-arg="home">${ic('play')}Começar a jogar</button></div>`;return;}
+  list.innerHTML=S.history.map(r=>{
+    const pills=[`<span class="pill-s">${ic('clock')}${fmtDur(r.dur)}</span>`,`<span class="pill-s">${ic('cards')}${r.cards} ${r.cards===1?'carta':'cartas'}</span>`];
+    if(r.skips)pills.push(`<span class="pill-s">${ic('skip')}${r.skips} ${r.skips===1?'pulo':'pulos'}</span>`);
+    if(r.coringas)pills.push(`<span class="pill-s">${ic('crown')}${r.coringas} ${r.coringas===1?'coringa':'coringas'}</span>`);
+    if(r.favs)pills.push(`<span class="pill-s">${ic('heart')}${r.favs} ${r.favs===1?'favorita':'favoritas'}</span>`);
+    if(r.scores)pills.push(`<span class="pill-s acc">${ic('trophy')}${r.scores[0]} × ${r.scores[1]}</span>`);
+    if(r.conq.length)pills.push(`<span class="pill-s acc">${ic('star')}${r.conq.length} ${r.conq.length===1?'conquista':'conquistas'}</span>`);
+    const lv=r.levels.length?r.levels.map(l=>LEVEL_LABEL[l]).join(' · '):'';
+    return `<article class="hist"><div class="hist-body"><div class="hist-top"><span class="hist-mode">${ic(MODE_META[r.mode].icon)}${MODE_META[r.mode].name}</span><span class="hist-date">${esc(fmtDate(r.ts))}</span></div>
+      <div class="hist-names">${esc(r.names[0])} &amp; ${esc(r.names[1])}${lv?' · '+lv:''}</div><div class="hist-meta">${pills.join('')}</div></div>
+      <button class="fav-del" data-act="histDel" data-arg="${esc(r.id)}" aria-label="Apagar esta partida do histórico">${ic('trash')}</button></article>`;
+  }).join('')+`<button class="btn danger block" data-act="histClear" style="margin-top:6px">${ic('trash')}Apagar todo o histórico</button>`;
+}
+async function delHistory(id){
+  const r=S.history.find(x=>x.id===id);if(!r)return;
+  if(!await confirmDlg('Apagar esta partida?','Ela some do histórico. As estatísticas gerais não mudam.','Apagar'))return;
+  S.history=S.history.filter(x=>x.id!==id);saveHistory();renderHistory();renderStatsTiles();toast('Partida apagada',{icon:'trash'});
+}
+async function clearHistory(){
+  if(!await confirmDlg('Apagar todo o histórico?','Todas as partidas registradas serão removidas. Isso não pode ser desfeito.','Apagar tudo'))return;
+  S.history=[];saveHistory();renderHistory();renderStatsTiles();toast('Histórico apagado',{icon:'trash'});
+}
+async function resetStats(){
+  if(!await confirmDlg('Zerar estatísticas?','Cartas vistas, sessões, puladas, coringas e tempo voltam a zero. Conquistas já desbloqueadas, favoritas e histórico continuam.','Zerar'))return;
+  S.stats={perguntas:0,sessoes:0,coringas:0,puladas:0,concluidas:0,tempo:0,maxCartas:0,modos:[]};saveStats();
+  renderStatsTiles();if(currentScreen==='conquistas')renderConq();toast('Estatísticas zeradas',{icon:'check'});
+}
+
+/* ---------- Resumo ---------- */
+function closingMessage(rec){
+  const [a,b]=rec.names;
+  const pool=[`${a} & ${b}, que bom ter esse tempo só de vocês.`,'Boas perguntas abrem portas. Obrigado por abrirem essas com carinho.','O que foi dito aqui fica entre vocês dois.','Mais uma noite para guardar. Até a próxima rodada.'];
+  if(rec.dur>=20*60000)pool.push('Mais de vinte minutos só de vocês dois. Isso também é carinho.');
+  if(rec.levels.includes('picante')&&rec.levels.length===1)pool.push('Uma noite intensa. Que continue assim.');
+  if(rec.favs>0)pool.push('Vocês guardaram algumas cartas para voltar depois. Boa escolha.');
+  return pool[rec.ts%pool.length];
+}
+function renderSummary(){
+  const {rec,reason}=lastSummary;const [a,b]=rec.names;
+  const title=reason==='limit'?'Meta cumprida!':reason==='deck'?'Fim das cartas':'Fim de jogo';
+  const tiles=[[fmtDur(rec.dur),'duração'],[rec.cards,'cartas apresentadas'],[rec.skips,'puladas'],[rec.favs,'favoritadas']];
+  if(rec.coringas)tiles.push([rec.coringas,rec.coringas===1?'coringa':'coringas']);
+  const tileHTML=tiles.map(([n,l],i)=>`<div class="tile" ${tiles.length%2&&i===tiles.length-1?'style="grid-column:span 2"':''}><span class="tile-n">${esc(n)}</span><span class="tile-l">${l}</span></div>`).join('');
+  let scoreHTML='';
+  if(rec.scores){
+    const [x,y]=rec.scores;
+    scoreHTML=`<div class="sum-scores">${[[a,x,x>y,'p1'],[b,y,y>x,'p2']].map(([n,v,w,p])=>`<div class="sum-sc ${w?'win':''}"><div class="sum-sc-n"><span style="width:7px;height:7px;border-radius:50%;background:rgb(var(--${p}))"></span>${esc(n)}</div><div class="sum-sc-v">${v}</div></div>`).join('')}</div>`;
+  }
+  const conq=rec.conq.map(id=>CONQUISTAS_DEF.find(c=>c.id===id)).filter(Boolean);
+  const conqHTML=conq.length?`<div class="sec-title" style="width:100%">conquistas desta partida</div><div class="sum-conq">${conq.map(c=>`<div class="conq done"><div class="conq-ico">${ic(c.ico)}</div><div class="conq-info"><div class="conq-name">${esc(c.name)}</div><div class="conq-desc">${esc(c.desc)}</div></div></div>`).join('')}</div>`:'';
+  const sparks=Array.from({length:14},(_,i)=>`<i style="left:${(i*7+Math.random()*5).toFixed(1)}%;animation-delay:${(Math.random()*4).toFixed(1)}s;animation-duration:${(3.6+Math.random()*2.4).toFixed(1)}s"></i>`).join('');
+  $('#summaryBox').innerHTML=`<div class="sparks" aria-hidden="true">${sparks}</div>
+    <div class="sum-badge">${ic('heart','fill')}</div><h1>${title}</h1><div class="sum-names">${esc(a)} &amp; ${esc(b)} · ${MODE_META[rec.mode].name}</div>
+    <p class="sum-msg">${esc(closingMessage(rec))}</p>
+    <div class="sum-stats">${tileHTML}</div>
+    <p class="hint" style="margin:-2px 0 14px">“Cartas apresentadas” são as que apareceram na tela — não significa que todas foram respondidas.</p>
+    ${scoreHTML}${conqHTML}
+    <div class="sum-actions"><button class="btn primary block" data-act="again">${ic('play')}Jogar de novo</button>
+      <button class="btn block" data-act="go" data-arg="home">${ic('home')}Voltar ao início</button>
+      <button class="btn ghost block" data-act="go" data-arg="history">${ic('history')}Ver histórico</button></div>`;
+}
+
+/* ---------- Ações (delegação única: nenhum evento é registrado duas vezes) ---------- */
+function applySetting(key){
+  saveSettings();
+  if(key==='theme'||key==='night')applyTheme();
+  if(key==='calm')applyCalm();
+  syncControls();
+  if(sess){
+    if(key==='timer'||key==='timerSecs'){resetTimer();syncRuntime();}
+    if(key==='score')paintScores();
+    if(key==='limit'){sess.limit=S.settings.limit;paint();}
+    if(key==='random'){
+      if(S.settings.random&&sess.levelKey!=='mix')setLevel('mix');
+      else if(!S.settings.random&&sess.levelKey==='mix')setLevel(S.settings.startLevel);
+    }
+    if(key==='sound')paint();
+  }
+}
+const ACT={
+  go:el=>navigate(el.dataset.arg),
+  mode:el=>{S.settings.mode=el.dataset.arg;applySetting('mode');},
+  tog:el=>{const k=el.dataset.key;S.settings[k]=k==='calm'?!isCalm():!S.settings[k];if(k==='sound'&&S.settings.sound)sfx.reveal();applySetting(k);},
+  seg:el=>{const k=el.dataset.key,d=SETTING_DEFS[k];const raw=el.dataset.val;const v=typeof d.oneOf[0]==='number'?Number(raw):raw;S.settings[k]=v;applySetting(k);},
+  theme:el=>{S.settings.theme=el.dataset.val;applySetting('theme');},
+  start:()=>startSession(),
+  resume:()=>navigate('game'),
+  again:()=>{S.settings.mode=lastSummary?lastSummary.rec.mode:S.settings.mode;startSession(true);},
+  cqDest:el=>{cqDest=el.dataset.arg;$$('#cqDest .chip').forEach(c=>c.setAttribute('aria-checked',String(c===el)));},
+  cqLevel:el=>{cqLevel=el.dataset.arg;$$('#cqLevel .chip').forEach(c=>c.setAttribute('aria-checked',String(c===el)));},
+  cqAdd:addCustom,
+  cqDel:el=>delCustom(el.dataset.arg),
+  next:()=>advance('next'),
+  back:goBack,
+  fav:toggleFav,
+  skip,
+  shuffleDeck,
+  level:el=>setLevel(el.dataset.arg),
+  score:el=>{const [i,d]=el.dataset.arg.split(':').map(Number);changeScore(i,d);},
+  soundGame:()=>{S.settings.sound=!S.settings.sound;applySetting('sound');if(S.settings.sound)sfx.reveal();},
+  endAsk,
+  roleta:openRoleta,
+  roletaClose:closeRoleta,
+  spin,
+  favFilter:el=>{favFilter=el.dataset.arg;renderFavs();},
+  favDel:el=>delFav(el.dataset.arg),
+  histDel:el=>delHistory(el.dataset.arg),
+  histClear:clearHistory,
+  resetStats
+};
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el||el.disabled||el.getAttribute('aria-disabled')==='true')return;
+  const f=ACT[el.dataset.act];if(f)f(el,e);
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.name!==undefined){
+    const v=t.value.slice(0,14);if(t.dataset.name==='0')S.players.n1=v;else S.players.n2=v;
+    writeJSON(K.players,S.players);
+    $$('[data-name="'+t.dataset.name+'"]').forEach(o=>{if(o!==t)o.value=v;});
+    $('#greet').textContent=greeting();if(sess)paint();
+  }else if(t.id==='cqText'){$('#cqLen').textContent=t.value.length;if($('#cqMsg').textContent)cqMsg('');}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.id==='cqText'){e.preventDefault();addCustom();}
+  else if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.name==='0'){const n=$('#name2');if(n&&e.target.id==='name1'){e.preventDefault();n.focus();}}
+});
+
+/* ---------- Início ---------- */
+function init(){
+  try{loadAll();}catch(err){console.error('Falha ao carregar dados; usando padrões.',err);S.settings=loadSettings();S.stats=loadStats();}
+  applyTheme();buildControls();
+  const isAnniv=renderHome();
+  showScreen('home');
+  maybeAnniversary(isAnniv);
+}
+init();
+</script>
+</body>
+</html>
